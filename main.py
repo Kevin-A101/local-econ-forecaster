@@ -2,14 +2,19 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+from app.city_registry import (
+    resolve_location,
+    suggested_location_names,
+    supported_city_names,
+    supported_state_names,
+)
 from app.scrapers.job_scraper import scrape_local_jobs
 from app.scrapers.menu_scraper import scrape_restaurant_menu
 from app.scrapers.permit_scraper import scrape_commercial_permits
@@ -18,6 +23,8 @@ from app.services.economics_engine import calculate_local_economic_summary
 
 BASE_DIR = Path(__file__).resolve().parent
 STATIC_DIR = BASE_DIR / "app" / "static"
+MODEL_VERSION = "mvp-full-backend-0.7.0"
+TOTAL_SIGNALS = 3
 
 
 class IndicatorPoint(BaseModel):
@@ -26,8 +33,24 @@ class IndicatorPoint(BaseModel):
     unit: str
 
 
+class SignalCoverage(BaseModel):
+    signal: str
+    available: bool
+    record_count: int
+    coverage_mode: str
+    source_market: str
+
+
 class ForecastSummary(BaseModel):
     city: str
+    source_market: str
+    coverage_mode: str
+    coverage_label: str
+    confidence_score: float = Field(..., ge=0, le=100)
+    confidence_label: str
+    available_signals: int = Field(..., ge=0, le=TOTAL_SIGNALS)
+    total_signals: int = Field(default=TOTAL_SIGNALS, ge=TOTAL_SIGNALS, le=TOTAL_SIGNALS)
+    signal_coverage: list[SignalCoverage]
     observed_at: datetime
     local_inflation_index: float = Field(..., ge=0)
     local_economic_heat_score: float = Field(..., ge=0, le=100)
@@ -51,7 +74,11 @@ class PermitRecord(BaseModel):
 
 class PermitScrapeResponse(BaseModel):
     city: str
+    requested_market: str
+    source_market: str
+    coverage_mode: str
     source_url: str
+    signal_available: bool
     record_count: int
     records: list[PermitRecord]
 
@@ -67,7 +94,11 @@ class MenuRecord(BaseModel):
 
 class MenuScrapeResponse(BaseModel):
     city: str
+    requested_market: str
+    source_market: str
+    coverage_mode: str
     source_url: str
+    signal_available: bool
     record_count: int
     records: list[MenuRecord]
 
@@ -88,40 +119,28 @@ class JobRecord(BaseModel):
 
 class JobScrapeResponse(BaseModel):
     city: str
+    requested_market: str
+    source_market: str
+    coverage_mode: str
     source_url: str
+    signal_available: bool
     record_count: int
     records: list[JobRecord]
 
 
-async def build_live_summary() -> ForecastSummary:
-    permit_payload = await scrape_commercial_permits()
-    menu_payload = await scrape_restaurant_menu()
-    job_payload = await scrape_local_jobs()
-    engine_output = calculate_local_economic_summary(
-        permit_payload, menu_payload, job_payload
-    )
-
-    return ForecastSummary(
-        city=engine_output["city"],
-        observed_at=engine_output["observed_at"],
-        local_inflation_index=engine_output["local_inflation_index"],
-        local_economic_heat_score=engine_output["local_economic_heat_score"],
-        permits=[IndicatorPoint(**item) for item in engine_output["permit_indicators"]],
-        menu_prices=[
-            IndicatorPoint(**item) for item in engine_output["menu_indicators"]
-        ],
-        jobs=[IndicatorPoint(**item) for item in engine_output["job_indicators"]],
-        model_version="mvp-full-backend-0.4.0",
-        notes=engine_output["notes"],
-    )
+class SupportedLocationsResponse(BaseModel):
+    cities: list[str]
+    states: list[str]
+    suggested_locations: list[str]
+    default_location: str
 
 
 app = FastAPI(
     title="Hyper-Local Business Cycle Forecaster",
-    version="0.4.0",
+    version="0.7.0",
     description=(
-        "MVP API for scraping hyper-local business signals and serving a lightweight "
-        "forecast summary for a single dashboard."
+        "API for scraping hyper-local business signals and serving a live "
+        "multi-city and statewide forecast summary dashboard."
     ),
 )
 
@@ -137,6 +156,105 @@ if STATIC_DIR.exists():
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
+def _resolve_location_or_400(location: str | None):
+    try:
+        return resolve_location(location)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+def _confidence_from_payloads(*payloads: dict) -> dict:
+    signal_names = ("permits", "menus", "jobs")
+    coverage = []
+    available_signals = 0
+    coverage_modes = []
+
+    for signal_name, payload in zip(signal_names, payloads, strict=True):
+        available = bool(payload.get("signal_available"))
+        available_signals += int(available)
+        coverage_mode = str(payload.get("coverage_mode", "city"))
+        coverage_modes.append(coverage_mode)
+        coverage.append(
+            SignalCoverage(
+                signal=signal_name,
+                available=available,
+                record_count=int(payload.get("record_count", 0)),
+                coverage_mode=coverage_mode,
+                source_market=str(payload.get("source_market", payload.get("city", "Unknown"))),
+            )
+        )
+
+    if "state_fallback" in coverage_modes:
+        summary_mode = "state_fallback"
+    elif "state" in coverage_modes:
+        summary_mode = "state"
+    else:
+        summary_mode = "city"
+
+    base_score = {
+        "city": 96.0,
+        "state": 84.0,
+        "state_fallback": 74.0,
+    }[summary_mode]
+    confidence_score = max(30.0, round(base_score - ((TOTAL_SIGNALS - available_signals) * 18), 2))
+
+    if available_signals == TOTAL_SIGNALS and summary_mode == "city":
+        coverage_label = "Full city coverage"
+        confidence_label = "High confidence"
+    elif available_signals == TOTAL_SIGNALS and summary_mode == "state":
+        coverage_label = "Statewide coverage"
+        confidence_label = "Strong statewide signal"
+    elif available_signals == TOTAL_SIGNALS:
+        coverage_label = "City request resolved with state fallback"
+        confidence_label = "Moderate confidence"
+    else:
+        coverage_label = f"Partial coverage ({available_signals}/{TOTAL_SIGNALS} signals)"
+        confidence_label = "Directional only" if confidence_score < 65 else "Moderate confidence"
+
+    first_payload = payloads[0]
+    return {
+        "source_market": str(first_payload.get("source_market", first_payload.get("city", "Unknown"))),
+        "coverage_mode": summary_mode,
+        "coverage_label": coverage_label,
+        "confidence_score": confidence_score,
+        "confidence_label": confidence_label,
+        "available_signals": available_signals,
+        "signal_coverage": coverage,
+    }
+
+
+async def build_live_summary(location: str | None = None) -> ForecastSummary:
+    permit_payload = await scrape_commercial_permits(city=location)
+    menu_payload = await scrape_restaurant_menu(city=location)
+    job_payload = await scrape_local_jobs(city=location)
+    engine_output = calculate_local_economic_summary(permit_payload, menu_payload, job_payload)
+    coverage = _confidence_from_payloads(permit_payload, menu_payload, job_payload)
+
+    notes = list(engine_output["notes"])
+    notes.append(f"Location resolution: {coverage['coverage_label']}. Source market: {coverage['source_market']}.")
+    if coverage["available_signals"] < TOTAL_SIGNALS:
+        notes.append("One or more signals are unavailable, so the forecast is based on partial source coverage.")
+
+    return ForecastSummary(
+        city=engine_output["city"],
+        source_market=coverage["source_market"],
+        coverage_mode=coverage["coverage_mode"],
+        coverage_label=coverage["coverage_label"],
+        confidence_score=coverage["confidence_score"],
+        confidence_label=coverage["confidence_label"],
+        available_signals=coverage["available_signals"],
+        signal_coverage=coverage["signal_coverage"],
+        observed_at=engine_output["observed_at"],
+        local_inflation_index=engine_output["local_inflation_index"],
+        local_economic_heat_score=engine_output["local_economic_heat_score"],
+        permits=[IndicatorPoint(**item) for item in engine_output["permit_indicators"]],
+        menu_prices=[IndicatorPoint(**item) for item in engine_output["menu_indicators"]],
+        jobs=[IndicatorPoint(**item) for item in engine_output["job_indicators"]],
+        model_version=MODEL_VERSION,
+        notes=notes,
+    )
+
+
 @app.get("/api/v1/health", tags=["health"])
 async def health_check() -> dict[str, str]:
     return {
@@ -147,13 +265,31 @@ async def health_check() -> dict[str, str]:
     }
 
 
+@app.get("/api/v1/locations", response_model=SupportedLocationsResponse, tags=["meta"])
+async def get_supported_locations() -> SupportedLocationsResponse:
+    return SupportedLocationsResponse(
+        cities=supported_city_names(),
+        states=supported_state_names(),
+        suggested_locations=suggested_location_names(),
+        default_location=resolve_location(None).display_name,
+    )
+
+
+@app.get("/api/v1/cities", response_model=SupportedLocationsResponse, tags=["meta"])
+async def get_supported_cities_alias() -> SupportedLocationsResponse:
+    return await get_supported_locations()
+
+
 @app.get(
     "/api/v1/scrape/permits/commercial",
     response_model=PermitScrapeResponse,
     tags=["scraping"],
 )
-async def get_commercial_permits() -> PermitScrapeResponse:
-    payload = await scrape_commercial_permits()
+async def get_commercial_permits(
+    city: str | None = Query(default=None, description="Any US state, supported city, or city/state input like Phoenix, AZ"),
+) -> PermitScrapeResponse:
+    _resolve_location_or_400(city)
+    payload = await scrape_commercial_permits(city=city)
     return PermitScrapeResponse(**payload)
 
 
@@ -162,8 +298,11 @@ async def get_commercial_permits() -> PermitScrapeResponse:
     response_model=MenuScrapeResponse,
     tags=["scraping"],
 )
-async def get_restaurant_menu() -> MenuScrapeResponse:
-    payload = await scrape_restaurant_menu()
+async def get_restaurant_menu(
+    city: str | None = Query(default=None, description="Any US state, supported city, or city/state input like Phoenix, AZ"),
+) -> MenuScrapeResponse:
+    _resolve_location_or_400(city)
+    payload = await scrape_restaurant_menu(city=city)
     return MenuScrapeResponse(**payload)
 
 
@@ -172,39 +311,37 @@ async def get_restaurant_menu() -> MenuScrapeResponse:
     response_model=JobScrapeResponse,
     tags=["scraping"],
 )
-async def get_local_jobs() -> JobScrapeResponse:
-    payload = await scrape_local_jobs()
+async def get_local_jobs(
+    city: str | None = Query(default=None, description="Any US state, supported city, or city/state input like Phoenix, AZ"),
+) -> JobScrapeResponse:
+    _resolve_location_or_400(city)
+    payload = await scrape_local_jobs(city=city)
     return JobScrapeResponse(**payload)
 
 
 @app.get("/api/v1/forecast/summary", response_model=ForecastSummary, tags=["forecast"])
-async def get_forecast_summary() -> ForecastSummary:
-    return await build_live_summary()
+async def get_forecast_summary(
+    city: str | None = Query(default=None, description="Any US state, supported city, or city/state input like Phoenix, AZ"),
+) -> ForecastSummary:
+    _resolve_location_or_400(city)
+    return await build_live_summary(location=city)
 
 
 @app.get("/api/v1/forecast/debug", tags=["forecast"])
-async def get_debug_payload() -> JSONResponse:
-    permit_scrape = await scrape_commercial_permits()
-    menu_scrape = await scrape_restaurant_menu()
-    job_scrape = await scrape_local_jobs()
-    summary = calculate_local_economic_summary(
-        permit_scrape, menu_scrape, job_scrape
-    )
+async def get_debug_payload(
+    city: str | None = Query(default=None, description="Any US state, supported city, or city/state input like Phoenix, AZ"),
+) -> JSONResponse:
+    resolved_profile = _resolve_location_or_400(city)
+    permit_scrape = await scrape_commercial_permits(city=city)
+    menu_scrape = await scrape_restaurant_menu(city=city)
+    job_scrape = await scrape_local_jobs(city=city)
+    summary = await build_live_summary(location=city)
 
     return JSONResponse(
         content={
             "generated_at": datetime.now(timezone.utc).isoformat(),
-            "summary": ForecastSummary(
-                city=summary["city"],
-                observed_at=summary["observed_at"],
-                local_inflation_index=summary["local_inflation_index"],
-                local_economic_heat_score=summary["local_economic_heat_score"],
-                permits=[IndicatorPoint(**item) for item in summary["permit_indicators"]],
-                menu_prices=[IndicatorPoint(**item) for item in summary["menu_indicators"]],
-                jobs=[IndicatorPoint(**item) for item in summary["job_indicators"]],
-                model_version="mvp-full-backend-0.4.0",
-                notes=summary["notes"],
-            ).model_dump(mode="json"),
+            "requested_city": resolved_profile.display_name,
+            "summary": summary.model_dump(mode="json"),
             "permit_scrape": permit_scrape,
             "menu_scrape": menu_scrape,
             "job_scrape": job_scrape,
@@ -226,46 +363,13 @@ async def serve_root() -> HTMLResponse:
             <meta charset="UTF-8" />
             <meta name="viewport" content="width=device-width, initial-scale=1.0" />
             <title>Hyper-Local Business Cycle Forecaster</title>
-            <style>
-                body {
-                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-                    background: #0f172a;
-                    color: #e2e8f0;
-                    margin: 0;
-                    display: grid;
-                    min-height: 100vh;
-                    place-items: center;
-                    padding: 24px;
-                }
-                main {
-                    max-width: 720px;
-                    line-height: 1.6;
-                }
-                code {
-                    background: rgba(148, 163, 184, 0.15);
-                    padding: 2px 6px;
-                    border-radius: 6px;
-                }
-            </style>
         </head>
         <body>
             <main>
                 <h1>Hyper-Local Business Cycle Forecaster</h1>
-                <p>The API is running. The dashboard HTML will be added in the next step.</p>
-                <p>Try <code>/api/v1/scrape/permits/commercial</code>, <code>/api/v1/scrape/menu/restaurant</code>, <code>/api/v1/scrape/jobs/local</code>, or <code>/api/v1/forecast/summary</code>.</p>
+                <p>The API is running.</p>
             </main>
         </body>
         </html>
         """.strip()
     )
-
-
-def get_openapi_tags() -> list[dict[str, Any]]:
-    return [
-        {"name": "health", "description": "Service availability endpoints."},
-        {"name": "scraping", "description": "Web scraping endpoints for local indicators."},
-        {"name": "forecast", "description": "Forecast and local indicator endpoints."},
-    ]
-
-
-app.openapi_tags = get_openapi_tags()

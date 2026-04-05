@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import re
 from dataclasses import dataclass
 from typing import Any
@@ -10,80 +9,26 @@ from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from playwright.async_api import async_playwright
 from playwright._impl._errors import Error as PlaywrightError
 
-
-MOCK_JOBS_HTML = """
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8" />
-    <title>Mock Local Jobs</title>
-</head>
-<body>
-    <main>
-        <section data-testid="job-results">
-            <article data-testid="job-card">
-                <h2 data-testid="job-title">Commercial Construction Project Manager</h2>
-                <p data-testid="job-sector">Construction</p>
-                <p data-testid="job-company">North Texas Build Group</p>
-                <p data-testid="job-location">Frisco, TX</p>
-                <p data-testid="job-salary">$88,000 - $112,000</p>
-            </article>
-            <article data-testid="job-card">
-                <h2 data-testid="job-title">Assistant Superintendent</h2>
-                <p data-testid="job-sector">Construction</p>
-                <p data-testid="job-company">Legacy Commercial Builders</p>
-                <p data-testid="job-location">Plano, TX</p>
-                <p data-testid="job-salary">$72,000 - $91,000</p>
-            </article>
-            <article data-testid="job-card">
-                <h2 data-testid="job-title">Restaurant General Manager</h2>
-                <p data-testid="job-sector">Hospitality</p>
-                <p data-testid="job-company">Preston Corridor Kitchen</p>
-                <p data-testid="job-location">Frisco, TX</p>
-                <p data-testid="job-salary">$58,000 - $74,000</p>
-            </article>
-            <article data-testid="job-card">
-                <h2 data-testid="job-title">Barista Shift Lead</h2>
-                <p data-testid="job-sector">Service</p>
-                <p data-testid="job-company">Oak Street Coffee</p>
-                <p data-testid="job-location">Frisco, TX</p>
-                <p data-testid="job-salary">$18 - $22</p>
-            </article>
-            <article data-testid="job-card">
-                <h2 data-testid="job-title">Retail Store Supervisor</h2>
-                <p data-testid="job-sector">Retail</p>
-                <p data-testid="job-company">Stonebriar Outfitters</p>
-                <p data-testid="job-location">Frisco, TX</p>
-                <p data-testid="job-salary">$44,000 - $52,000</p>
-            </article>
-            <article data-testid="job-card">
-                <h2 data-testid="job-title">Retail Sales Associate</h2>
-                <p data-testid="job-sector">Retail</p>
-                <p data-testid="job-company">Legacy Home Goods</p>
-                <p data-testid="job-location">Plano, TX</p>
-                <p data-testid="job-salary">$16 - $19</p>
-            </article>
-        </section>
-    </main>
-</body>
-</html>
-""".strip()
+from app.city_registry import resolve_location
 
 
 SECTOR_PATTERNS = {
-    "construction": re.compile(r"\bconstruction\b|\bsuperintendent\b|\bproject manager\b", re.I),
+    "construction": re.compile(r"\bconstruction\b|\bsuperintendent\b|\bproject manager\b|\bestimator\b|\bproject engineer\b", re.I),
     "hospitality_service": re.compile(
-        r"\bhospitality\b|\bservice\b|\brestaurant\b|\bbarista\b|\bserver\b|\bcafe\b",
+        r"\bhospitality\b|\bservice\b|\brestaurant\b|\bbarista\b|\bserver\b|\bcafe\b|\boperations\b",
         re.I,
     ),
-    "retail": re.compile(r"\bretail\b|\bsales associate\b|\bstore\b", re.I),
+    "retail": re.compile(r"\bretail\b|\bsales associate\b|\bstore\b|\bfloor supervisor\b|\bexperience supervisor\b", re.I),
 }
 
 
 @dataclass
 class JobPortalConfig:
-    city: str = "Frisco, TX"
-    source_url: str = os.getenv("LOCAL_JOBS_URL", "mock://frisco-local-jobs")
+    city: str
+    source_market: str
+    coverage_mode: str
+    source_url: str
+    mock_html: str
     card_selector: str = "[data-testid='job-card']"
     page_ready_selector: str = "[data-testid='job-results']"
     title_selector: str = "[data-testid='job-title']"
@@ -93,6 +38,17 @@ class JobPortalConfig:
     salary_selector: str = "[data-testid='job-salary']"
     timeout_ms: int = 30_000
     headless: bool = True
+
+
+def build_jobs_config(city_query: str | None = None) -> JobPortalConfig:
+    profile = resolve_location(city_query)
+    return JobPortalConfig(
+        city=profile.display_name,
+        source_market=profile.source_market,
+        coverage_mode=profile.coverage_mode,
+        source_url=profile.jobs_source_url,
+        mock_html=profile.jobs_html,
+    )
 
 
 def _classify_sector(title: str, sector_text: str) -> str | None:
@@ -139,9 +95,12 @@ def _extract_rows_from_html(html: str, config: JobPortalConfig) -> list[dict[str
     return rows
 
 
-async def scrape_local_jobs(config: JobPortalConfig | None = None) -> dict[str, Any]:
-    config = config or JobPortalConfig()
-    rows = []
+async def scrape_local_jobs(
+    city: str | None = None,
+    config: JobPortalConfig | None = None,
+) -> dict[str, Any]:
+    config = config or build_jobs_config(city)
+    rows: list[dict[str, str]] = []
 
     try:
         async with async_playwright() as playwright:
@@ -150,7 +109,7 @@ async def scrape_local_jobs(config: JobPortalConfig | None = None) -> dict[str, 
 
             try:
                 if config.source_url.startswith("mock://"):
-                    await page.set_content(MOCK_JOBS_HTML)
+                    await page.set_content(config.mock_html)
                 else:
                     await page.goto(config.source_url, wait_until="domcontentloaded")
 
@@ -179,14 +138,13 @@ async def scrape_local_jobs(config: JobPortalConfig | None = None) -> dict[str, 
                 )
             except PlaywrightTimeoutError as exc:
                 raise RuntimeError(
-                    f"Timed out while waiting for job selector "
-                    f"'{config.page_ready_selector}'"
+                    f"Timed out while waiting for job selector '{config.page_ready_selector}'"
                 ) from exc
             finally:
                 await browser.close()
     except PlaywrightError:
         if config.source_url.startswith("mock://"):
-            rows = _extract_rows_from_html(MOCK_JOBS_HTML, config)
+            rows = _extract_rows_from_html(config.mock_html, config)
         else:
             raise
 
@@ -217,7 +175,11 @@ async def scrape_local_jobs(config: JobPortalConfig | None = None) -> dict[str, 
 
     return {
         "city": config.city,
+        "requested_market": config.city,
+        "source_market": config.source_market,
+        "coverage_mode": config.coverage_mode,
         "source_url": config.source_url,
+        "signal_available": bool(normalized_rows),
         "record_count": len(normalized_rows),
         "records": normalized_rows,
     }

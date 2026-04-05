@@ -94,15 +94,32 @@
     <div class="pointer-events-none fixed inset-0 bg-grid bg-[size:34px_34px] opacity-20"></div>
 
     <main class="relative mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <section class="hero-card glass fade-in rounded-[2rem] px-6 py-8 shadow-glow sm:px-8 lg:px-10">
+        <nav class="glass sticky top-4 z-30 mb-6 rounded-2xl px-4 py-3 shadow-card">
+            <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div class="flex flex-wrap gap-2">
+                    <button class="nav-tab rounded-full border border-slate-700 bg-slate-900/70 px-4 py-2 text-xs font-medium uppercase tracking-[0.24em] text-slate-200" data-target="heroSection" type="button">Overview</button>
+                    <button class="nav-tab rounded-full border border-slate-700 bg-slate-900/70 px-4 py-2 text-xs font-medium uppercase tracking-[0.24em] text-slate-200" data-target="forecastSection" type="button">Forecast</button>
+                    <button class="nav-tab rounded-full border border-slate-700 bg-slate-900/70 px-4 py-2 text-xs font-medium uppercase tracking-[0.24em] text-slate-200" data-target="chartsSection" type="button">Charts</button>
+                    <button class="nav-tab rounded-full border border-slate-700 bg-slate-900/70 px-4 py-2 text-xs font-medium uppercase tracking-[0.24em] text-slate-200" data-target="impactSection" type="button">Business Lens</button>
+                    <button class="nav-tab rounded-full border border-slate-700 bg-slate-900/70 px-4 py-2 text-xs font-medium uppercase tracking-[0.24em] text-slate-200" data-target="sourcesSection" type="button">Sources</button>
+                </div>
+                <form id="locationForm" class="flex flex-col gap-2 sm:flex-row sm:items-center" autocomplete="off">
+                    <input id="locationInput" list="supportedCitiesList" class="rounded-full border border-slate-700 bg-slate-950/70 px-4 py-2 text-sm text-white outline-none transition focus:border-cyan-300" type="text" placeholder="Try Phoenix, AZ or California..." />
+                    <button class="rounded-full bg-cyan-300 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:brightness-110" type="submit">Load Market</button>
+                </form>
+                <datalist id="supportedCitiesList"></datalist>
+            </div>
+            <p id="locationHelper" class="mt-3 text-xs leading-6 text-slate-400">Loading supported cities...</p>
+        </nav>
+        <section id="heroSection" class="hero-card glass fade-in scroll-mt-28 rounded-[2rem] px-6 py-8 shadow-glow sm:px-8 lg:px-10">
             <div class="grid gap-8 lg:grid-cols-[1.35fr_0.9fr] lg:items-start">
                 <div>
                     <div class="flex flex-wrap items-center gap-3">
                         <span class="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-[11px] font-medium uppercase eyebrow text-cyan-200">
                             EconPulse
                         </span>
-                        <span class="rounded-full border border-slate-700 bg-slate-900/70 px-3 py-1 text-xs text-slate-300">
-                            Live Frisco, TX signal monitor
+                        <span id="currentCityBadge" class="rounded-full border border-slate-700 bg-slate-900/70 px-3 py-1 text-xs text-slate-300">
+                            Live city signal monitor
                         </span>
                     </div>
                     <h1 class="mt-6 max-w-4xl text-4xl font-semibold tracking-tight text-white sm:text-5xl lg:text-6xl">
@@ -159,8 +176,20 @@
                     </p>
                     <dl class="mt-6 space-y-4">
                         <div class="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-950/60 px-4 py-3">
-                            <dt class="text-sm text-slate-400">City monitored</dt>
+                            <dt class="text-sm text-slate-400">Market requested</dt>
                             <dd id="cityLabel" class="text-sm font-semibold text-white">Loading...</dd>
+                        </div>
+                        <div class="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-950/60 px-4 py-3">
+                            <dt class="text-sm text-slate-400">Source market</dt>
+                            <dd id="sourceMarket" class="text-sm font-semibold text-white">Loading...</dd>
+                        </div>
+                        <div class="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-950/60 px-4 py-3">
+                            <dt class="text-sm text-slate-400">Coverage</dt>
+                            <dd id="coverageLabel" class="text-sm font-semibold text-amber-200">Loading...</dd>
+                        </div>
+                        <div class="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-950/60 px-4 py-3">
+                            <dt class="text-sm text-slate-400">Confidence</dt>
+                            <dd id="confidenceLabel" class="text-sm font-semibold text-cyan-300">Loading...</dd>
                         </div>
                         <div class="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-950/60 px-4 py-3">
                             <dt class="text-sm text-slate-400">Last update</dt>
@@ -175,7 +204,7 @@
             </div>
         </section>
 
-        <section id="forecastSection" class="mt-6 grid gap-4 lg:grid-cols-4">
+        <section id="forecastSection" class="scroll-mt-28 mt-6 grid gap-4 lg:grid-cols-4">
             <article class="glass rounded-[1.6rem] p-6 shadow-card">
                 <p class="text-xs uppercase eyebrow text-slate-500">Local Inflation Index</p>
                 <h2 id="inflationIndex" class="metric-text mt-4 text-5xl font-semibold text-emerald-300">--</h2>
@@ -232,11 +261,26 @@
                         <p class="text-xs uppercase eyebrow text-slate-500">Coverage</p>
                         <h3 class="mt-2 text-2xl font-semibold text-white">Live source footprint</h3>
                     </div>
-                    <span class="rounded-full border border-slate-700 bg-slate-900/80 px-3 py-1 text-xs text-slate-300">
-                        Scraper-backed
-                    </span>
+                    <div class="flex flex-wrap gap-2">
+                        <span id="coverageModeBadge" class="rounded-full border border-slate-700 bg-slate-900/80 px-3 py-1 text-xs text-slate-300">
+                            Coverage loading
+                        </span>
+                        <span id="confidenceBadge" class="rounded-full border border-slate-700 bg-slate-900/80 px-3 py-1 text-xs text-slate-300">
+                            Confidence loading
+                        </span>
+                    </div>
                 </div>
                 <div class="mt-5 grid gap-4">
+                    <div class="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
+                        <p class="text-xs uppercase eyebrow text-slate-500">Signal Coverage</p>
+                        <p id="availableSignals" class="mt-2 text-3xl font-semibold text-white">--</p>
+                        <p class="mt-1 text-sm text-slate-400">Tracked signals currently available for this forecast</p>
+                    </div>
+                    <div class="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
+                        <p class="text-xs uppercase eyebrow text-slate-500">Confidence Score</p>
+                        <p id="confidenceScore" class="mt-2 text-3xl font-semibold text-cyan-300">--</p>
+                        <p class="mt-1 text-sm text-slate-400">Confidence rises with local coverage depth and full signal availability</p>
+                    </div>
                     <div class="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
                         <p class="text-xs uppercase eyebrow text-slate-500">Permit Signals</p>
                         <p id="permitCoverage" class="mt-2 text-3xl font-semibold text-emerald-300">--</p>
@@ -256,7 +300,7 @@
             </article>
         </section>
 
-        <section class="mt-6 grid gap-6 xl:grid-cols-2">
+        <section id="chartsSection" class="scroll-mt-28 mt-6 grid gap-6 xl:grid-cols-2">
             <article class="glass rounded-[1.75rem] p-6 shadow-card">
                 <div class="flex items-start justify-between gap-4">
                     <div>
@@ -268,6 +312,7 @@
                 </div>
                 <div class="chart-wrap mt-6">
                     <canvas id="permitChart"></canvas>
+                    <div id="permitChartEmpty" class="absolute inset-0 hidden items-center justify-center rounded-2xl border border-dashed border-slate-700 bg-slate-950/80 px-6 text-center text-sm leading-6 text-slate-300"></div>
                 </div>
             </article>
 
@@ -282,6 +327,7 @@
                 </div>
                 <div class="chart-wrap mt-6">
                     <canvas id="menuChart"></canvas>
+                    <div id="menuChartEmpty" class="absolute inset-0 hidden items-center justify-center rounded-2xl border border-dashed border-slate-700 bg-slate-950/80 px-6 text-center text-sm leading-6 text-slate-300"></div>
                 </div>
             </article>
 
@@ -296,6 +342,7 @@
                 </div>
                 <div class="chart-wrap mt-6">
                     <canvas id="jobsChart"></canvas>
+                    <div id="jobsChartEmpty" class="absolute inset-0 hidden items-center justify-center rounded-2xl border border-dashed border-slate-700 bg-slate-950/80 px-6 text-center text-sm leading-6 text-slate-300"></div>
                 </div>
             </article>
 
@@ -310,11 +357,12 @@
                 </div>
                 <div class="chart-wrap mt-6">
                     <canvas id="salaryChart"></canvas>
+                    <div id="salaryChartEmpty" class="absolute inset-0 hidden items-center justify-center rounded-2xl border border-dashed border-slate-700 bg-slate-950/80 px-6 text-center text-sm leading-6 text-slate-300"></div>
                 </div>
             </article>
         </section>
 
-        <section class="mt-6 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+        <section id="impactSection" class="scroll-mt-28 mt-6 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
             <article class="glass rounded-[1.75rem] p-6 shadow-card">
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
@@ -357,7 +405,7 @@
             </article>
         </section>
 
-        <section class="mt-6 grid gap-6 xl:grid-cols-3">
+        <section id="sourcesSection" class="scroll-mt-28 mt-6 grid gap-6 xl:grid-cols-3">
             <article class="glass rounded-[1.75rem] p-6 shadow-card xl:col-span-2">
                 <div class="flex items-center justify-between">
                     <div>
@@ -417,6 +465,8 @@
         let jobsChart;
         let salaryChart;
         let activeImpact = "retail";
+        let activeCityQuery = new URLSearchParams(window.location.search).get("city") || "";
+        let supportedLocations = [];
 
         function formatNumber(value, decimals = 2) {
             return new Intl.NumberFormat(undefined, {
@@ -494,6 +544,49 @@
             return indicators.find(item => item.label === label)?.value ?? 0;
         }
 
+        function getSignalCoverage(summary, signal) {
+            return (summary.signal_coverage || []).find(item => item.signal === signal) || {
+                signal,
+                available: false,
+                record_count: 0,
+                coverage_mode: summary.coverage_mode || "city",
+                source_market: summary.source_market || summary.city || "Unknown"
+            };
+        }
+
+        function applyBadgeStyles(element, tone) {
+            const classes = {
+                cyan: "rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-xs font-medium text-cyan-200",
+                amber: "rounded-full border border-amber-300/20 bg-amber-300/10 px-3 py-1 text-xs font-medium text-amber-200",
+                emerald: "rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-xs font-medium text-emerald-200",
+                slate: "rounded-full border border-slate-700 bg-slate-900/80 px-3 py-1 text-xs text-slate-300"
+            };
+            element.className = classes[tone] || classes.slate;
+        }
+
+        function setChartEmptyState(id, isVisible, message) {
+            const element = document.getElementById(id);
+            if (!element) {
+                return;
+            }
+
+            element.textContent = message;
+            if (isVisible) {
+                element.classList.remove("hidden");
+                element.classList.add("flex");
+            } else {
+                element.classList.add("hidden");
+                element.classList.remove("flex");
+            }
+        }
+
+        function destroyChart(chart) {
+            if (chart) {
+                chart.destroy();
+            }
+            return undefined;
+        }
+
         function deriveMarketCall(summary) {
             const inflation = Number(summary.local_inflation_index ?? 0);
             const heat = Number(summary.local_economic_heat_score ?? 0);
@@ -554,6 +647,20 @@
             const menuPressure = getIndicatorValue(summary.menu_prices || [], "Menu Price Inflation Signal");
             const jobPosts = getIndicatorValue(summary.jobs || [], "Total Local Job Posts");
 
+            if (summary.available_signals < 3) {
+                return {
+                    title: "Coverage-aware",
+                    body: "At least one signal is unavailable, so decisions should lean on available coverage and directional confirmation instead of exact precision."
+                };
+            }
+
+            if (summary.coverage_mode === "state_fallback") {
+                return {
+                    title: "State fallback mode",
+                    body: `This market is using ${summary.source_market} as a fallback signal base, which is useful for directional planning but less precise than city-native coverage.`
+                };
+            }
+
             if (permitRate > 75 && jobPosts >= 5) {
                 return {
                     title: "Expansion-ready",
@@ -583,26 +690,46 @@
             const menuPressure = getIndicatorValue(summary.menu_prices || [], "Menu Price Inflation Signal");
             const totalJobs = getIndicatorValue(summary.jobs || [], "Total Local Job Posts");
             const salaryPressure = getIndicatorValue(summary.jobs || [], "Local Salary Pressure");
+            const marketPrecision = summary.coverage_mode === "city"
+                ? "full city coverage"
+                : summary.coverage_mode === "state"
+                    ? "statewide coverage"
+                    : `${summary.source_market} fallback coverage`;
 
-            return `EconPulse is reading ${formatInteger(permitCount)} commercial permits, an issued-permit rate of ${formatNumber(issuedRate)}%, menu inflation pressure of ${formatNumber(menuPressure)}%, and ${formatInteger(totalJobs)} local job posts. Combined, the latest signal stack suggests ${Number(summary.local_economic_heat_score) >= 55 ? "an active growth environment with visible cost pressure" : "a stable but watch-worthy local market"}, while salary pressure is currently running at ${formatNumber(salaryPressure)}%.`;
+            return `EconPulse is reading ${formatInteger(permitCount)} commercial permits, an issued-permit rate of ${formatNumber(issuedRate)}%, menu inflation pressure of ${formatNumber(menuPressure)}%, and ${formatInteger(totalJobs)} local job posts. The forecast is running on ${marketPrecision} with ${summary.available_signals}/${summary.total_signals} signals available and ${summary.confidence_label.toLowerCase()}. Combined, the latest signal stack suggests ${Number(summary.local_economic_heat_score) >= 55 ? "an active growth environment with visible cost pressure" : "a stable but watch-worthy local market"}, while salary pressure is currently running at ${formatNumber(salaryPressure)}%.`;
         }
 
         function buildInsightCards(summary) {
+            const permitSignal = getSignalCoverage(summary, "permits");
+            const menuSignal = getSignalCoverage(summary, "menus");
+            const jobSignal = getSignalCoverage(summary, "jobs");
             const cards = [
                 {
                     label: "Development",
-                    value: formatInteger(getIndicatorValue(summary.permits || [], "Commercial Permits Scraped")),
-                    copy: "Commercial permits scraped from the current local extract."
+                    value: permitSignal.available
+                        ? formatInteger(getIndicatorValue(summary.permits || [], "Commercial Permits Scraped"))
+                        : "Unavailable",
+                    copy: permitSignal.available
+                        ? "Commercial permits scraped from the current local extract."
+                        : "Permit coverage is unavailable for this market snapshot."
                 },
                 {
                     label: "Food Inflation",
-                    value: `${formatNumber(getIndicatorValue(summary.menu_prices || [], "Menu Price Inflation Signal"))}%`,
-                    copy: "Average benchmark restaurant price pressure vs baseline."
+                    value: menuSignal.available
+                        ? `${formatNumber(getIndicatorValue(summary.menu_prices || [], "Menu Price Inflation Signal"))}%`
+                        : "Unavailable",
+                    copy: menuSignal.available
+                        ? "Average benchmark restaurant price pressure vs baseline."
+                        : "Menu benchmark data is unavailable for this market snapshot."
                 },
                 {
                     label: "Labor Tightness",
-                    value: `${formatNumber(getIndicatorValue(summary.jobs || [], "Local Salary Pressure"))}%`,
-                    copy: "Median wage pressure across tracked hiring sectors."
+                    value: jobSignal.available
+                        ? `${formatNumber(getIndicatorValue(summary.jobs || [], "Local Salary Pressure"))}%`
+                        : "Unavailable",
+                    copy: jobSignal.available
+                        ? "Median wage pressure across tracked hiring sectors."
+                        : "Local hiring data is unavailable for this market snapshot."
                 }
             ];
 
@@ -635,6 +762,14 @@
             const container = document.getElementById(containerId);
             container.innerHTML = "";
 
+            if (!records.length) {
+                const empty = document.createElement("div");
+                empty.className = "rounded-2xl border border-dashed border-slate-700 bg-slate-900/60 px-4 py-5 text-sm leading-6 text-slate-400";
+                empty.textContent = "No source rows are available for this signal in the current market snapshot.";
+                container.appendChild(empty);
+                return;
+            }
+
             records.slice(0, 3).forEach(record => {
                 const card = document.createElement("div");
                 card.className = "rounded-2xl border border-slate-800 bg-slate-900/70 p-3";
@@ -654,7 +789,14 @@
             });
         }
 
-        function upsertPermitChart(permitIndicators) {
+        function upsertPermitChart(permitIndicators, signalCoverage) {
+            const isAvailable = signalCoverage?.available;
+            setChartEmptyState("permitChartEmpty", !isAvailable, `Permit signal unavailable for this market. Coverage mode: ${signalCoverage?.coverage_mode || "unknown"}.`);
+            if (!isAvailable) {
+                permitChart = destroyChart(permitChart);
+                return;
+            }
+
             const labels = permitIndicators.map(item => item.label);
             const values = permitIndicators.map(item => item.value);
 
@@ -710,7 +852,14 @@
             permitChart = new Chart(document.getElementById("permitChart"), config);
         }
 
-        function upsertMenuChart(menuIndicators) {
+        function upsertMenuChart(menuIndicators, signalCoverage) {
+            const isAvailable = signalCoverage?.available;
+            setChartEmptyState("menuChartEmpty", !isAvailable, `Menu benchmark signal unavailable for this market. Coverage mode: ${signalCoverage?.coverage_mode || "unknown"}.`);
+            if (!isAvailable) {
+                menuChart = destroyChart(menuChart);
+                return;
+            }
+
             const labels = [];
             const liveValues = [];
             const baselineValues = [];
@@ -783,7 +932,14 @@
             menuChart = new Chart(document.getElementById("menuChart"), config);
         }
 
-        function upsertJobsChart(jobIndicators) {
+        function upsertJobsChart(jobIndicators, signalCoverage) {
+            const isAvailable = signalCoverage?.available;
+            setChartEmptyState("jobsChartEmpty", !isAvailable, `Jobs signal unavailable for this market. Coverage mode: ${signalCoverage?.coverage_mode || "unknown"}.`);
+            if (!isAvailable) {
+                jobsChart = destroyChart(jobsChart);
+                return;
+            }
+
             const postingIndicators = jobIndicators.filter(item => item.unit === "count" && item.label.includes("Job Posts"));
             const labels = postingIndicators.map(item => item.label.replace(" Job Posts", ""));
             const values = postingIndicators.map(item => item.value);
@@ -838,7 +994,14 @@
             jobsChart = new Chart(document.getElementById("jobsChart"), config);
         }
 
-        function upsertSalaryChart(jobIndicators) {
+        function upsertSalaryChart(jobIndicators, signalCoverage) {
+            const isAvailable = signalCoverage?.available;
+            setChartEmptyState("salaryChartEmpty", !isAvailable, `Wage signal unavailable for this market. Coverage mode: ${signalCoverage?.coverage_mode || "unknown"}.`);
+            if (!isAvailable) {
+                salaryChart = destroyChart(salaryChart);
+                return;
+            }
+
             const salaryIndicators = jobIndicators.filter(item => item.unit === "usd" && item.label.includes("Median Salary"));
             const config = {
                 type: "bar",
@@ -913,7 +1076,22 @@
             setText("marketCallTitle", marketCall.title);
             setText("marketCallBody", marketCall.body);
             setText("cityLabel", summary.city);
+            setText("sourceMarket", summary.source_market);
+            setText("coverageLabel", summary.coverage_label);
+            setText("confidenceLabel", `${summary.confidence_label} · ${formatNumber(summary.confidence_score)} / 100`);
+            setText("confidenceScore", formatNumber(summary.confidence_score));
+            setText("availableSignals", `${summary.available_signals}/${summary.total_signals}`);
+            setText("currentCityBadge", `Live ${summary.city} signal monitor`);
+            document.getElementById("locationInput").value = summary.city;
             setText("briefSummary", buildBriefSummary(summary));
+
+            const coverageModeBadge = document.getElementById("coverageModeBadge");
+            coverageModeBadge.textContent = summary.coverage_label;
+            applyBadgeStyles(coverageModeBadge, summary.coverage_mode === "city" ? "emerald" : summary.coverage_mode === "state" ? "cyan" : "amber");
+
+            const confidenceBadge = document.getElementById("confidenceBadge");
+            confidenceBadge.textContent = `${summary.confidence_label} · ${formatNumber(summary.confidence_score)} / 100`;
+            applyBadgeStyles(confidenceBadge, summary.confidence_score >= 85 ? "emerald" : summary.confidence_score >= 65 ? "amber" : "slate");
 
             const badge = document.getElementById("marketCallBadge");
             badge.textContent = marketCall.badge;
@@ -958,29 +1136,80 @@
                 <p class="mt-2 text-xs uppercase eyebrow text-slate-500">${record.sector_text} | ${record.salary_band}</p>
             `);
 
-            upsertPermitChart(summary.permits || []);
-            upsertMenuChart(summary.menu_prices || []);
-            upsertJobsChart(summary.jobs || []);
-            upsertSalaryChart(summary.jobs || []);
+            const permitCoverage = getSignalCoverage(summary, "permits");
+            const menuCoverage = getSignalCoverage(summary, "menus");
+            const jobsCoverage = getSignalCoverage(summary, "jobs");
+
+            upsertPermitChart(summary.permits || [], permitCoverage);
+            upsertMenuChart(summary.menu_prices || [], menuCoverage);
+            upsertJobsChart(summary.jobs || [], jobsCoverage);
+            upsertSalaryChart(summary.jobs || [], jobsCoverage);
+        }
+
+        async function loadSupportedCities() {
+            try {
+                const response = await fetch("/api/v1/locations", {
+                    headers: { Accept: "application/json" }
+                });
+
+                if (!response.ok) {
+                    throw new Error("Unable to load supported locations.");
+                }
+
+                const payload = await response.json();
+                supportedLocations = payload.suggested_locations || [...(payload.cities || []), ...(payload.states || [])];
+                if (!activeCityQuery) {
+                    activeCityQuery = payload.default_location || "";
+                }
+
+                const datalist = document.getElementById("supportedCitiesList");
+                datalist.innerHTML = supportedLocations
+                    .map((location) => `<option value="${location}"></option>`)
+                    .join("");
+
+                document.getElementById("locationHelper").textContent = "Type a city and state like Phoenix, AZ, or enter a state like California for statewide coverage.";
+            } catch (error) {
+                console.error(error);
+                document.getElementById("locationHelper").textContent = "Unable to load supported location metadata right now.";
+            }
         }
 
         async function loadDashboard() {
             hideError();
 
             try {
-                const response = await fetch("/api/v1/forecast/debug", {
+                const query = activeCityQuery ? `?city=${encodeURIComponent(activeCityQuery)}` : "";
+                const response = await fetch(`/api/v1/forecast/debug${query}`, {
                     headers: { Accept: "application/json" }
                 });
 
+                const errorPayload = !response.ok
+                    ? await response.json().catch(() => null)
+                    : null;
+
                 if (!response.ok) {
-                    throw new Error(`Forecast request failed with status ${response.status}`);
+                    throw new Error(errorPayload?.detail || `Forecast request failed with status ${response.status}`);
                 }
 
                 const debugPayload = await response.json();
+                activeCityQuery = debugPayload.summary?.city || activeCityQuery;
                 renderDashboard(debugPayload);
+
+                const locationCount = supportedLocations.length || 54;
+                document.getElementById("locationHelper").textContent = `Viewing ${debugPayload.summary.city} using ${debugPayload.summary.coverage_label.toLowerCase()}. ${locationCount} suggested locations are available in typeahead.`;
+
+                const params = new URLSearchParams(window.location.search);
+                if (debugPayload.summary?.city) {
+                    params.set("city", debugPayload.summary.city);
+                    window.history.replaceState({}, "", `${window.location.pathname}?${params.toString()}`);
+                }
+
+                return true;
             } catch (error) {
                 console.error(error);
-                showError("Unable to load EconPulse data right now. Confirm the API is running and returning /api/v1/forecast/debug.");
+                document.getElementById("locationHelper").textContent = `${error.message} Try a state like California or a city/state format like Phoenix, AZ.`;
+                showError(error.message || "Unable to load EconPulse data right now.");
+                return false;
             }
         }
 
@@ -1009,9 +1238,61 @@
             });
         });
 
-        updateImpactCopy();
-        loadDashboard();
-        setInterval(loadDashboard, 60000);
-    </script>
-</body>
-</html>
+        function setActiveNav(targetId) {
+            document.querySelectorAll(".nav-tab").forEach((button) => {
+                const isActive = button.dataset.target === targetId;
+                button.className = isActive
+                    ? "nav-tab rounded-full border border-cyan-300/20 bg-cyan-300/10 px-4 py-2 text-xs font-medium uppercase tracking-[0.24em] text-cyan-200"
+                    : "nav-tab rounded-full border border-slate-700 bg-slate-900/70 px-4 py-2 text-xs font-medium uppercase tracking-[0.24em] text-slate-200";
+            });
+        }
+
+        document.querySelectorAll(".nav-tab").forEach((button) => {
+            button.addEventListener("click", () => {
+                const target = document.getElementById(button.dataset.target);
+                if (target) {
+                    target.scrollIntoView({ behavior: "smooth", block: "start" });
+                    setActiveNav(button.dataset.target);
+                }
+            });
+        });
+
+        const sectionObserver = new IntersectionObserver((entries) => {
+            const activeEntry = entries
+                .filter((entry) => entry.isIntersecting)
+                .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+
+            if (activeEntry?.target?.id) {
+                setActiveNav(activeEntry.target.id);
+            }
+        }, {
+            rootMargin: "-20% 0px -55% 0px",
+            threshold: [0.2, 0.45, 0.7]
+        });
+
+        ["heroSection", "forecastSection", "chartsSection", "impactSection", "sourcesSection"]
+            .map((id) => document.getElementById(id))
+            .filter(Boolean)
+            .forEach((section) => sectionObserver.observe(section));
+
+        document.getElementById("locationForm").addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const value = document.getElementById("locationInput").value.trim();
+
+            activeCityQuery = value || supportedLocations[0] || "";
+            const success = await loadDashboard();
+            if (success) {
+                document.getElementById("heroSection").scrollIntoView({ behavior: "smooth", block: "start" });
+                setActiveNav("heroSection");
+            }
+        });
+
+        async function initializeDashboard() {
+            updateImpactCopy();
+            setActiveNav("heroSection");
+            await loadSupportedCities();
+            await loadDashboard();
+            setInterval(loadDashboard, 60000);
+        }
+
+        initializeDashboard();

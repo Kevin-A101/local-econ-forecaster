@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import re
 from dataclasses import dataclass
 from typing import Any
@@ -10,42 +9,7 @@ from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from playwright.async_api import async_playwright
 from playwright._impl._errors import Error as PlaywrightError
 
-
-MOCK_MENU_HTML = """
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8" />
-    <title>Mock Local Menu</title>
-</head>
-<body>
-    <main>
-        <section data-testid="menu-list">
-            <article data-testid="menu-item">
-                <h2 data-testid="item-name">Signature Burger Combo</h2>
-                <p data-testid="item-description">Double patty burger, fries, and a fountain drink.</p>
-                <span data-testid="item-price">$13.95</span>
-            </article>
-            <article data-testid="menu-item">
-                <h2 data-testid="item-name">Chicken Burrito Bowl</h2>
-                <p data-testid="item-description">Rice, beans, salsa, pico, and grilled chicken.</p>
-                <span data-testid="item-price">$12.45</span>
-            </article>
-            <article data-testid="menu-item">
-                <h2 data-testid="item-name">Vanilla Latte</h2>
-                <p data-testid="item-description">Espresso with steamed milk and vanilla.</p>
-                <span data-testid="item-price">$5.85</span>
-            </article>
-            <article data-testid="menu-item">
-                <h2 data-testid="item-name">Crispy Chicken Sandwich</h2>
-                <p data-testid="item-description">Buttermilk fried chicken with slaw.</p>
-                <span data-testid="item-price">$11.95</span>
-            </article>
-        </section>
-    </main>
-</body>
-</html>
-""".strip()
+from app.city_registry import resolve_location
 
 
 BENCHMARK_PATTERNS = {
@@ -57,8 +21,11 @@ BENCHMARK_PATTERNS = {
 
 @dataclass
 class MenuPortalConfig:
-    city: str = "Frisco, TX"
-    source_url: str = os.getenv("RESTAURANT_MENU_URL", "mock://frisco-restaurant-menu")
+    city: str
+    source_market: str
+    coverage_mode: str
+    source_url: str
+    mock_html: str
     item_selector: str = "[data-testid='menu-item']"
     page_ready_selector: str = "[data-testid='menu-list']"
     name_selector: str = "[data-testid='item-name']"
@@ -66,6 +33,17 @@ class MenuPortalConfig:
     price_selector: str = "[data-testid='item-price']"
     timeout_ms: int = 30_000
     headless: bool = True
+
+
+def build_menu_config(city_query: str | None = None) -> MenuPortalConfig:
+    profile = resolve_location(city_query)
+    return MenuPortalConfig(
+        city=profile.display_name,
+        source_market=profile.source_market,
+        coverage_mode=profile.coverage_mode,
+        source_url=profile.menu_source_url,
+        mock_html=profile.menu_html,
+    )
 
 
 def _parse_currency(value: str) -> float:
@@ -91,9 +69,7 @@ def _extract_rows_from_html(html: str, config: MenuPortalConfig) -> list[dict[st
         rows.append(
             {
                 "item_name": name_node.get_text(strip=True) if name_node else "",
-                "item_description": (
-                    description_node.get_text(strip=True) if description_node else ""
-                ),
+                "item_description": description_node.get_text(strip=True) if description_node else "",
                 "price": price_node.get_text(strip=True) if price_node else "",
             }
         )
@@ -101,10 +77,11 @@ def _extract_rows_from_html(html: str, config: MenuPortalConfig) -> list[dict[st
 
 
 async def scrape_restaurant_menu(
+    city: str | None = None,
     config: MenuPortalConfig | None = None,
 ) -> dict[str, Any]:
-    config = config or MenuPortalConfig()
-    rows = []
+    config = config or build_menu_config(city)
+    rows: list[dict[str, str]] = []
 
     try:
         async with async_playwright() as playwright:
@@ -113,7 +90,7 @@ async def scrape_restaurant_menu(
 
             try:
                 if config.source_url.startswith("mock://"):
-                    await page.set_content(MOCK_MENU_HTML)
+                    await page.set_content(config.mock_html)
                 else:
                     await page.goto(config.source_url, wait_until="domcontentloaded")
 
@@ -140,14 +117,13 @@ async def scrape_restaurant_menu(
                 )
             except PlaywrightTimeoutError as exc:
                 raise RuntimeError(
-                    f"Timed out while waiting for menu selector "
-                    f"'{config.page_ready_selector}'"
+                    f"Timed out while waiting for menu selector '{config.page_ready_selector}'"
                 ) from exc
             finally:
                 await browser.close()
     except PlaywrightError:
         if config.source_url.startswith("mock://"):
-            rows = _extract_rows_from_html(MOCK_MENU_HTML, config)
+            rows = _extract_rows_from_html(config.mock_html, config)
         else:
             raise
 
@@ -172,7 +148,11 @@ async def scrape_restaurant_menu(
 
     return {
         "city": config.city,
+        "requested_market": config.city,
+        "source_market": config.source_market,
+        "coverage_mode": config.coverage_mode,
         "source_url": config.source_url,
+        "signal_available": bool(normalized_rows),
         "record_count": len(normalized_rows),
         "records": normalized_rows,
     }
