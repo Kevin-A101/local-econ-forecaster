@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hyper-Local Business Cycle Forecaster</title>
+    <title>EconPulse | Hyper-Local Economic Forecaster</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <script>
@@ -11,193 +11,386 @@
             theme: {
                 extend: {
                     colors: {
-                        terminal: {
-                            950: "#020617",
-                            900: "#0f172a",
-                            800: "#111827",
-                            700: "#1e293b"
+                        slatebrand: {
+                            950: "#07111f",
+                            900: "#0b1728",
+                            850: "#0f1d31",
+                            800: "#13243b"
                         },
-                        neon: {
-                            cyan: "#22d3ee",
-                            emerald: "#34d399",
-                            blue: "#60a5fa",
-                            amber: "#fbbf24",
-                            rose: "#fb7185"
+                        signal: {
+                            mint: "#74f2ce",
+                            aqua: "#64d9ff",
+                            gold: "#ffcf5a",
+                            coral: "#ff8f70",
+                            lilac: "#bca7ff"
                         }
                     },
                     boxShadow: {
-                        glow: "0 0 0 1px rgba(52, 211, 153, 0.2), 0 0 30px rgba(34, 211, 238, 0.08)"
+                        card: "0 24px 60px rgba(2, 8, 23, 0.28)",
+                        glow: "0 0 0 1px rgba(100, 217, 255, 0.12), 0 20px 60px rgba(100, 217, 255, 0.10)"
                     },
                     backgroundImage: {
-                        grid: "linear-gradient(rgba(148,163,184,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.08) 1px, transparent 1px)"
+                        mesh: "radial-gradient(circle at 20% 20%, rgba(100, 217, 255, 0.18), transparent 26%), radial-gradient(circle at 80% 0%, rgba(116, 242, 206, 0.12), transparent 24%), radial-gradient(circle at 80% 78%, rgba(255, 143, 112, 0.10), transparent 26%)",
+                        grid: "linear-gradient(rgba(148,163,184,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.07) 1px, transparent 1px)"
                     }
                 }
             }
         };
     </script>
     <style>
-        body {
-            background:
-                radial-gradient(circle at top left, rgba(34, 211, 238, 0.12), transparent 28%),
-                radial-gradient(circle at top right, rgba(52, 211, 153, 0.10), transparent 26%),
-                linear-gradient(180deg, #020617 0%, #0f172a 55%, #111827 100%);
+        :root {
+            color-scheme: dark;
         }
 
-        .panel {
-            background: linear-gradient(180deg, rgba(15, 23, 42, 0.94), rgba(15, 23, 42, 0.8));
+        body {
+            background:
+                radial-gradient(circle at top center, rgba(100, 217, 255, 0.14), transparent 26%),
+                linear-gradient(180deg, #07111f 0%, #0b1728 45%, #13243b 100%);
+        }
+
+        .glass {
+            background: linear-gradient(180deg, rgba(11, 23, 40, 0.92), rgba(11, 23, 40, 0.74));
             border: 1px solid rgba(148, 163, 184, 0.14);
             backdrop-filter: blur(18px);
         }
 
-        .metric-glow {
-            text-shadow: 0 0 18px rgba(34, 211, 238, 0.22);
+        .hero-card {
+            background:
+                linear-gradient(135deg, rgba(100, 217, 255, 0.12), transparent 36%),
+                linear-gradient(180deg, rgba(11, 23, 40, 0.96), rgba(11, 23, 40, 0.80));
+        }
+
+        .eyebrow {
+            letter-spacing: 0.28em;
+        }
+
+        .metric-text {
+            text-shadow: 0 0 24px rgba(100, 217, 255, 0.12);
         }
 
         .chart-wrap {
             position: relative;
             height: 320px;
         }
+
+        .fade-in {
+            animation: fadeUp 700ms ease-out both;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
-<body class="min-h-screen bg-terminal-950 text-slate-100 antialiased">
-    <div class="absolute inset-0 bg-grid bg-[size:36px_36px] opacity-20 pointer-events-none"></div>
+<body class="min-h-screen bg-slatebrand-950 text-slate-100 antialiased">
+    <div class="pointer-events-none fixed inset-0 bg-mesh"></div>
+    <div class="pointer-events-none fixed inset-0 bg-grid bg-[size:34px_34px] opacity-20"></div>
 
-    <main class="relative mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-6 sm:px-6 lg:px-8">
-        <header class="panel shadow-glow rounded-3xl px-6 py-5 sm:px-8">
-            <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+    <main class="relative mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <section class="hero-card glass fade-in rounded-[2rem] px-6 py-8 shadow-glow sm:px-8 lg:px-10">
+            <div class="grid gap-8 lg:grid-cols-[1.35fr_0.9fr] lg:items-start">
                 <div>
-                    <p class="text-xs font-medium uppercase tracking-[0.35em] text-cyan-300/80">OpenAI Codex Creator Challenge</p>
-                    <h1 class="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-                        Hyper-Local Business Cycle Forecaster
+                    <div class="flex flex-wrap items-center gap-3">
+                        <span class="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-[11px] font-medium uppercase eyebrow text-cyan-200">
+                            EconPulse
+                        </span>
+                        <span class="rounded-full border border-slate-700 bg-slate-900/70 px-3 py-1 text-xs text-slate-300">
+                            Live Frisco, TX signal monitor
+                        </span>
+                    </div>
+                    <h1 class="mt-6 max-w-4xl text-4xl font-semibold tracking-tight text-white sm:text-5xl lg:text-6xl">
+                        See neighborhood economic pressure before official data catches up.
                     </h1>
-                    <p class="mt-3 max-w-3xl text-sm leading-6 text-slate-400 sm:text-base">
-                        Real-time signal monitor for localized inflation and labor demand using municipal permits,
-                        restaurant pricing, and local hiring activity.
+                    <p class="mt-5 max-w-3xl text-base leading-7 text-slate-300 sm:text-lg">
+                        EconPulse turns commercial permit activity, restaurant benchmark pricing, and local hiring demand
+                        into a live hyper-local inflation readout and business heat forecast for city-level decision making.
                     </p>
+                    <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+                        <button
+                            id="viewForecastButton"
+                            class="rounded-full bg-cyan-300 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:brightness-110"
+                            type="button"
+                        >
+                            View Live Forecast
+                        </button>
+                        <button
+                            id="refreshButton"
+                            class="rounded-full border border-slate-600 bg-slate-900/70 px-6 py-3 text-sm font-semibold text-slate-100 transition hover:border-emerald-300 hover:text-emerald-200"
+                            type="button"
+                        >
+                            Refresh Signal Snapshot
+                        </button>
+                    </div>
+                    <div class="mt-8 grid gap-3 sm:grid-cols-3">
+                        <div class="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
+                            <p class="text-xs uppercase eyebrow text-slate-500">Primary Use Case</p>
+                            <p class="mt-2 text-sm leading-6 text-slate-200">Spot local inflation pressure and business momentum in near real time.</p>
+                        </div>
+                        <div class="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
+                            <p class="text-xs uppercase eyebrow text-slate-500">Signals Tracked</p>
+                            <p id="heroCoverage" class="mt-2 text-sm leading-6 text-slate-200">Loading live source coverage...</p>
+                        </div>
+                        <div class="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
+                            <p class="text-xs uppercase eyebrow text-slate-500">Deployment</p>
+                            <p class="mt-2 text-sm leading-6 text-slate-200">FastAPI + Playwright live on Render with auto-refreshing scraper-backed data.</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="rounded-2xl border border-cyan-400/20 bg-slate-950/70 px-5 py-4">
-                    <p class="text-xs uppercase tracking-[0.28em] text-slate-500">Last Updated</p>
-                    <p id="lastUpdated" class="mt-2 text-lg font-medium text-cyan-300">Loading...</p>
-                </div>
-            </div>
-        </header>
 
-        <section class="mt-6 grid gap-6 lg:grid-cols-2">
-            <article class="panel shadow-glow rounded-3xl p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-xs uppercase tracking-[0.3em] text-slate-500">Local Inflation Index</p>
-                        <h2 class="mt-3 text-5xl font-semibold metric-glow text-emerald-300" id="inflationIndex">--</h2>
+                <aside class="glass rounded-[1.75rem] p-6 shadow-card">
+                    <div class="flex items-start justify-between gap-4">
+                        <div>
+                            <p class="text-xs uppercase eyebrow text-slate-500">Current Market Call</p>
+                            <h2 id="marketCallTitle" class="mt-3 text-2xl font-semibold text-white">Loading pulse...</h2>
+                        </div>
+                        <span id="marketCallBadge" class="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-xs font-medium text-emerald-200">
+                            Signal
+                        </span>
                     </div>
-                    <div class="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-sm text-emerald-200">
-                        Live Composite
-                    </div>
-                </div>
+                    <p id="marketCallBody" class="mt-4 text-sm leading-7 text-slate-300">
+                        EconPulse is reading the latest hyper-local signals.
+                    </p>
+                    <dl class="mt-6 space-y-4">
+                        <div class="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-950/60 px-4 py-3">
+                            <dt class="text-sm text-slate-400">City monitored</dt>
+                            <dd id="cityLabel" class="text-sm font-semibold text-white">Loading...</dd>
+                        </div>
+                        <div class="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-950/60 px-4 py-3">
+                            <dt class="text-sm text-slate-400">Last update</dt>
+                            <dd id="lastUpdated" class="text-sm font-semibold text-cyan-300">Loading...</dd>
+                        </div>
+                        <div class="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-950/60 px-4 py-3">
+                            <dt class="text-sm text-slate-400">Refresh cadence</dt>
+                            <dd class="text-sm font-semibold text-white">Every 60 seconds</dd>
+                        </div>
+                    </dl>
+                </aside>
+            </div>
+        </section>
+
+        <section id="forecastSection" class="mt-6 grid gap-4 lg:grid-cols-4">
+            <article class="glass rounded-[1.6rem] p-6 shadow-card">
+                <p class="text-xs uppercase eyebrow text-slate-500">Local Inflation Index</p>
+                <h2 id="inflationIndex" class="metric-text mt-4 text-5xl font-semibold text-emerald-300">--</h2>
                 <p class="mt-4 text-sm leading-6 text-slate-400">
-                    Weighted from commercial permit valuations and benchmark menu prices.
+                    Weighted blend of permit valuations and benchmark menu prices.
                 </p>
             </article>
 
-            <article class="panel shadow-glow rounded-3xl p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-xs uppercase tracking-[0.3em] text-slate-500">Local Economic Heat Score</p>
-                        <h2 class="mt-3 text-5xl font-semibold metric-glow text-cyan-300" id="heatScore">--</h2>
-                    </div>
-                    <div class="rounded-2xl border border-cyan-400/20 bg-cyan-400/10 px-4 py-2 text-sm text-cyan-200">
-                        Multi-Signal
-                    </div>
-                </div>
+            <article class="glass rounded-[1.6rem] p-6 shadow-card">
+                <p class="text-xs uppercase eyebrow text-slate-500">Economic Heat Score</p>
+                <h2 id="heatScore" class="metric-text mt-4 text-5xl font-semibold text-cyan-300">--</h2>
                 <p class="mt-4 text-sm leading-6 text-slate-400">
-                    Dynamic blend of permit volume, menu-price shifts, and local hiring demand.
+                    Composite of permit momentum, menu pressure, and local hiring demand.
+                </p>
+            </article>
+
+            <article class="glass rounded-[1.6rem] p-6 shadow-card">
+                <p class="text-xs uppercase eyebrow text-slate-500">Trend Direction</p>
+                <h2 id="trendDirection" class="metric-text mt-4 text-3xl font-semibold text-amber-300">--</h2>
+                <p id="trendDetail" class="mt-4 text-sm leading-6 text-slate-400">
+                    Loading directional read...
+                </p>
+            </article>
+
+            <article class="glass rounded-[1.6rem] p-6 shadow-card">
+                <p class="text-xs uppercase eyebrow text-slate-500">Decision Lens</p>
+                <h2 id="decisionLens" class="metric-text mt-4 text-3xl font-semibold text-orange-300">--</h2>
+                <p id="decisionLensBody" class="mt-4 text-sm leading-6 text-slate-400">
+                    Translating signal pressure into action.
                 </p>
             </article>
         </section>
 
-        <section class="mt-6 grid gap-6 xl:grid-cols-3">
-            <article class="panel rounded-3xl p-6">
-                <div class="flex items-start justify-between gap-4">
+        <section class="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+            <article class="glass rounded-[1.75rem] p-6 shadow-card">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <p class="text-xs uppercase tracking-[0.3em] text-slate-500">Chart 01</p>
-                        <h3 class="mt-2 text-xl font-semibold text-white">Commercial Permit Valuation</h3>
+                        <p class="text-xs uppercase eyebrow text-slate-500">Live Intelligence Brief</p>
+                        <h3 class="mt-2 text-2xl font-semibold text-white">What changed in this market snapshot</h3>
                     </div>
-                    <span class="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-medium text-emerald-200">
-                        Permits
+                    <span class="rounded-full border border-violet-300/20 bg-violet-300/10 px-3 py-1 text-xs font-medium text-violet-200">
+                        AI-style narrative summary
                     </span>
                 </div>
-                <p class="mt-3 text-sm text-slate-400">
-                    Tracks permit counts, issuance rate, and valuation pressure.
+                <p id="briefSummary" class="mt-5 text-base leading-8 text-slate-200">
+                    Building latest localized brief...
                 </p>
+                <div id="insightGrid" class="mt-6 grid gap-4 md:grid-cols-3"></div>
+            </article>
+
+            <article class="glass rounded-[1.75rem] p-6 shadow-card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs uppercase eyebrow text-slate-500">Coverage</p>
+                        <h3 class="mt-2 text-2xl font-semibold text-white">Live source footprint</h3>
+                    </div>
+                    <span class="rounded-full border border-slate-700 bg-slate-900/80 px-3 py-1 text-xs text-slate-300">
+                        Scraper-backed
+                    </span>
+                </div>
+                <div class="mt-5 grid gap-4">
+                    <div class="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
+                        <p class="text-xs uppercase eyebrow text-slate-500">Permit Signals</p>
+                        <p id="permitCoverage" class="mt-2 text-3xl font-semibold text-emerald-300">--</p>
+                        <p class="mt-1 text-sm text-slate-400">Commercial development pressure</p>
+                    </div>
+                    <div class="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
+                        <p class="text-xs uppercase eyebrow text-slate-500">Menu Signals</p>
+                        <p id="menuCoverage" class="mt-2 text-3xl font-semibold text-cyan-300">--</p>
+                        <p class="mt-1 text-sm text-slate-400">Restaurant benchmark pricing</p>
+                    </div>
+                    <div class="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
+                        <p class="text-xs uppercase eyebrow text-slate-500">Job Signals</p>
+                        <p id="jobCoverage" class="mt-2 text-3xl font-semibold text-amber-300">--</p>
+                        <p class="mt-1 text-sm text-slate-400">Local hiring and wage pressure</p>
+                    </div>
+                </div>
+            </article>
+        </section>
+
+        <section class="mt-6 grid gap-6 xl:grid-cols-2">
+            <article class="glass rounded-[1.75rem] p-6 shadow-card">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <p class="text-xs uppercase eyebrow text-slate-500">Chart 01</p>
+                        <h3 class="mt-2 text-2xl font-semibold text-white">Permit pressure by signal</h3>
+                        <p class="mt-2 text-sm text-slate-400">Permit volume, issuance rate, and valuation pressure reveal local build momentum.</p>
+                    </div>
+                    <span class="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-xs font-medium text-emerald-200">Permits</span>
+                </div>
                 <div class="chart-wrap mt-6">
                     <canvas id="permitChart"></canvas>
                 </div>
             </article>
 
-            <article class="panel rounded-3xl p-6">
+            <article class="glass rounded-[1.75rem] p-6 shadow-card">
                 <div class="flex items-start justify-between gap-4">
                     <div>
-                        <p class="text-xs uppercase tracking-[0.3em] text-slate-500">Chart 02</p>
-                        <h3 class="mt-2 text-xl font-semibold text-white">Menu Price Pressure</h3>
+                        <p class="text-xs uppercase eyebrow text-slate-500">Chart 02</p>
+                        <h3 class="mt-2 text-2xl font-semibold text-white">Menu benchmark vs baseline</h3>
+                        <p class="mt-2 text-sm text-slate-400">Restaurant pricing is compared against baseline expectations to surface inflation stress.</p>
                     </div>
-                    <span class="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs font-medium text-cyan-200">
-                        Menu
-                    </span>
+                    <span class="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-xs font-medium text-cyan-200">Menu</span>
                 </div>
-                <p class="mt-3 text-sm text-slate-400">
-                    Benchmark pricing for burger combo, burrito bowl, latte, and inflation signal.
-                </p>
                 <div class="chart-wrap mt-6">
                     <canvas id="menuChart"></canvas>
                 </div>
             </article>
 
-            <article class="panel rounded-3xl p-6">
+            <article class="glass rounded-[1.75rem] p-6 shadow-card">
                 <div class="flex items-start justify-between gap-4">
                     <div>
-                        <p class="text-xs uppercase tracking-[0.3em] text-slate-500">Chart 03</p>
-                        <h3 class="mt-2 text-xl font-semibold text-white">Local Hiring Demand</h3>
+                        <p class="text-xs uppercase eyebrow text-slate-500">Chart 03</p>
+                        <h3 class="mt-2 text-2xl font-semibold text-white">Local hiring mix</h3>
+                        <p class="mt-2 text-sm text-slate-400">Demand concentration shows which sectors are pulling labor and signaling expansion.</p>
                     </div>
-                    <span class="rounded-full border border-amber-400/20 bg-amber-400/10 px-3 py-1 text-xs font-medium text-amber-200">
-                        Jobs
-                    </span>
+                    <span class="rounded-full border border-amber-300/20 bg-amber-300/10 px-3 py-1 text-xs font-medium text-amber-200">Jobs</span>
                 </div>
-                <p class="mt-3 text-sm text-slate-400">
-                    Sector posting volume across construction, hospitality/service, and retail.
-                </p>
                 <div class="chart-wrap mt-6">
                     <canvas id="jobsChart"></canvas>
                 </div>
             </article>
+
+            <article class="glass rounded-[1.75rem] p-6 shadow-card">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <p class="text-xs uppercase eyebrow text-slate-500">Chart 04</p>
+                        <h3 class="mt-2 text-2xl font-semibold text-white">Salary pressure by sector</h3>
+                        <p class="mt-2 text-sm text-slate-400">Median salary levels show where wage competition is rising most quickly.</p>
+                    </div>
+                    <span class="rounded-full border border-orange-300/20 bg-orange-300/10 px-3 py-1 text-xs font-medium text-orange-200">Wages</span>
+                </div>
+                <div class="chart-wrap mt-6">
+                    <canvas id="salaryChart"></canvas>
+                </div>
+            </article>
         </section>
 
-        <section class="mt-6 grid gap-6 lg:grid-cols-[1.6fr_1fr]">
-            <article class="panel rounded-3xl p-6">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-lg font-semibold text-white">Signal Notes</h3>
-                    <span class="text-xs uppercase tracking-[0.28em] text-slate-500">Model Feed</span>
+        <section class="mt-6 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+            <article class="glass rounded-[1.75rem] p-6 shadow-card">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <p class="text-xs uppercase eyebrow text-slate-500">Business Impact Lens</p>
+                        <h3 class="mt-2 text-2xl font-semibold text-white">What this means for operators</h3>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button class="impact-tab rounded-full border border-slate-700 bg-slate-900/70 px-3 py-2 text-xs font-medium text-slate-200" data-impact="retail" type="button">Retail</button>
+                        <button class="impact-tab rounded-full border border-slate-700 bg-slate-900/70 px-3 py-2 text-xs font-medium text-slate-200" data-impact="restaurant" type="button">Restaurants</button>
+                        <button class="impact-tab rounded-full border border-slate-700 bg-slate-900/70 px-3 py-2 text-xs font-medium text-slate-200" data-impact="commercial" type="button">Commercial Real Estate</button>
+                    </div>
                 </div>
-                <ul id="notesList" class="mt-4 space-y-3 text-sm text-slate-300"></ul>
+                <p id="impactBody" class="mt-5 text-base leading-8 text-slate-200">
+                    Loading operator guidance...
+                </p>
             </article>
 
-            <article class="panel rounded-3xl p-6">
+            <article class="glass rounded-[1.75rem] p-6 shadow-card">
                 <div class="flex items-center justify-between">
-                    <h3 class="text-lg font-semibold text-white">Coverage</h3>
-                    <span class="text-xs uppercase tracking-[0.28em] text-slate-500">Live Extract</span>
+                    <div>
+                        <p class="text-xs uppercase eyebrow text-slate-500">Method</p>
+                        <h3 class="mt-2 text-2xl font-semibold text-white">How EconPulse works</h3>
+                    </div>
+                    <span class="rounded-full border border-slate-700 bg-slate-900/80 px-3 py-1 text-xs text-slate-300">Transparent scoring</span>
                 </div>
-                <div class="mt-5 grid gap-4">
+                <ol class="mt-5 space-y-4 text-sm text-slate-300">
+                    <li class="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
+                        <span class="block text-xs uppercase eyebrow text-slate-500">01 | Extract</span>
+                        Pulls permit activity, menu benchmark prices, and local hiring demand from scraper-backed sources.
+                    </li>
+                    <li class="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
+                        <span class="block text-xs uppercase eyebrow text-slate-500">02 | Normalize</span>
+                        Uses Pandas and Scikit-Learn to standardize valuation, pricing, and labor signals into comparable indicators.
+                    </li>
+                    <li class="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
+                        <span class="block text-xs uppercase eyebrow text-slate-500">03 | Interpret</span>
+                        Publishes a Local Inflation Index, Economic Heat Score, and narrative market brief for business decisions.
+                    </li>
+                </ol>
+            </article>
+        </section>
+
+        <section class="mt-6 grid gap-6 xl:grid-cols-3">
+            <article class="glass rounded-[1.75rem] p-6 shadow-card xl:col-span-2">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs uppercase eyebrow text-slate-500">Source Transparency</p>
+                        <h3 class="mt-2 text-2xl font-semibold text-white">Latest extracted records</h3>
+                    </div>
+                    <span class="rounded-full border border-slate-700 bg-slate-900/80 px-3 py-1 text-xs text-slate-300">Live sample rows</span>
+                </div>
+                <div class="mt-6 grid gap-4 lg:grid-cols-3">
                     <div class="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
-                        <p class="text-xs uppercase tracking-[0.28em] text-slate-500">Permit Signals</p>
-                        <p id="permitCoverage" class="mt-2 text-2xl font-semibold text-emerald-300">--</p>
+                        <p class="text-xs uppercase eyebrow text-slate-500">Permits</p>
+                        <div id="permitRecords" class="mt-4 space-y-3 text-sm text-slate-200"></div>
                     </div>
                     <div class="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
-                        <p class="text-xs uppercase tracking-[0.28em] text-slate-500">Menu Signals</p>
-                        <p id="menuCoverage" class="mt-2 text-2xl font-semibold text-cyan-300">--</p>
+                        <p class="text-xs uppercase eyebrow text-slate-500">Menu</p>
+                        <div id="menuRecords" class="mt-4 space-y-3 text-sm text-slate-200"></div>
                     </div>
                     <div class="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
-                        <p class="text-xs uppercase tracking-[0.28em] text-slate-500">Job Signals</p>
-                        <p id="jobCoverage" class="mt-2 text-2xl font-semibold text-amber-300">--</p>
+                        <p class="text-xs uppercase eyebrow text-slate-500">Jobs</p>
+                        <div id="jobRecords" class="mt-4 space-y-3 text-sm text-slate-200"></div>
                     </div>
                 </div>
+            </article>
+
+            <article class="glass rounded-[1.75rem] p-6 shadow-card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs uppercase eyebrow text-slate-500">Signal Notes</p>
+                        <h3 class="mt-2 text-2xl font-semibold text-white">Model feed</h3>
+                    </div>
+                    <span class="rounded-full border border-slate-700 bg-slate-900/80 px-3 py-1 text-xs text-slate-300">Current logic</span>
+                </div>
+                <ul id="notesList" class="mt-5 space-y-3 text-sm text-slate-300"></ul>
             </article>
         </section>
 
@@ -205,11 +398,25 @@
     </main>
 
     <script>
-        const chartTextColor = "rgba(226, 232, 240, 0.82)";
+        const MENU_BASELINES = {
+            "Median Burger Combo": 12.0,
+            "Median Burrito Bowl": 10.5,
+            "Median Latte": 4.95
+        };
+        const IMPACT_COPY = {
+            retail: "Retail operators should watch permit momentum and wage pressure together. Rising commercial activity paired with stronger construction and store-level hiring usually signals healthier foot traffic, but it also raises labor competition and occupancy pressure.",
+            restaurant: "Restaurant operators should treat elevated menu benchmarks as a margin pressure warning. If menu prices stay high while hiring remains tight, cost control and pricing strategy become the most immediate levers.",
+            commercial: "Commercial real estate teams can use permit value, issuance rate, and sector hiring demand as an early occupancy proxy. Strong permit and labor signals together usually point to active tenant demand and tighter local capacity."
+        };
+
+        const chartTextColor = "rgba(226, 232, 240, 0.84)";
         const chartGridColor = "rgba(148, 163, 184, 0.12)";
+
         let permitChart;
         let menuChart;
         let jobsChart;
+        let salaryChart;
+        let activeImpact = "retail";
 
         function formatNumber(value, decimals = 2) {
             return new Intl.NumberFormat(undefined, {
@@ -218,20 +425,16 @@
             }).format(Number(value ?? 0));
         }
 
-        function formatCurrency(value) {
-            return new Intl.NumberFormat(undefined, {
-                style: "currency",
-                currency: "USD",
-                maximumFractionDigits: 0
-            }).format(Number(value ?? 0));
+        function formatInteger(value) {
+            return new Intl.NumberFormat().format(Number(value ?? 0));
         }
 
-        function formatCurrencyPrecise(value) {
+        function formatCurrency(value, decimals = 0) {
             return new Intl.NumberFormat(undefined, {
                 style: "currency",
                 currency: "USD",
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
+                minimumFractionDigits: decimals,
+                maximumFractionDigits: decimals
             }).format(Number(value ?? 0));
         }
 
@@ -252,7 +455,7 @@
             document.getElementById("errorBanner").classList.add("hidden");
         }
 
-        function buildBaseChartOptions() {
+        function buildCartesianOptions() {
             return {
                 responsive: true,
                 maintainAspectRatio: false,
@@ -260,13 +463,13 @@
                     legend: {
                         labels: {
                             color: chartTextColor,
-                            boxWidth: 14,
+                            boxWidth: 12,
                             usePointStyle: true,
                             pointStyle: "circle"
                         }
                     },
                     tooltip: {
-                        backgroundColor: "rgba(2, 6, 23, 0.92)",
+                        backgroundColor: "rgba(2, 6, 23, 0.94)",
                         borderColor: "rgba(148, 163, 184, 0.18)",
                         borderWidth: 1,
                         titleColor: "#f8fafc",
@@ -287,9 +490,174 @@
             };
         }
 
+        function getIndicatorValue(indicators, label) {
+            return indicators.find(item => item.label === label)?.value ?? 0;
+        }
+
+        function deriveMarketCall(summary) {
+            const inflation = Number(summary.local_inflation_index ?? 0);
+            const heat = Number(summary.local_economic_heat_score ?? 0);
+
+            if (heat >= 65 || inflation >= 132) {
+                return {
+                    title: "High-growth pressure market",
+                    badge: "Elevated",
+                    badgeClass: "border-orange-300/20 bg-orange-300/10 text-orange-200",
+                    body: "Development activity and localized pricing pressure are running hot. Operators should expect tighter labor conditions and stronger pricing sensitivity."
+                };
+            }
+
+            if (heat >= 45 || inflation >= 118) {
+                return {
+                    title: "Expansion with rising costs",
+                    badge: "Watchlist",
+                    badgeClass: "border-amber-300/20 bg-amber-300/10 text-amber-200",
+                    body: "The market is expanding, but costs are firming. This is a healthy growth regime with visible inflation pressure building underneath it."
+                };
+            }
+
+            return {
+                title: "Stable local demand",
+                badge: "Balanced",
+                badgeClass: "border-emerald-300/20 bg-emerald-300/10 text-emerald-200",
+                body: "Signals are steady and not overheating. The local market looks active enough to monitor, but not yet stretched."
+            };
+        }
+
+        function deriveTrend(summary) {
+            const heat = Number(summary.local_economic_heat_score ?? 0);
+            const inflation = Number(summary.local_inflation_index ?? 0);
+
+            if (heat >= 60 && inflation >= 125) {
+                return {
+                    direction: "Accelerating",
+                    detail: "Permits, pricing, and labor demand are all contributing to stronger local momentum."
+                };
+            }
+
+            if (heat >= 40) {
+                return {
+                    direction: "Firming",
+                    detail: "The market is trending positive, with enough signal strength to suggest ongoing expansion."
+                };
+            }
+
+            return {
+                direction: "Steady",
+                detail: "Current signals suggest a stable market without strong overheating or contraction risk."
+            };
+        }
+
+        function deriveDecisionLens(summary, debugPayload) {
+            const permitRate = getIndicatorValue(summary.permits || [], "Issued Permit Rate");
+            const salaryPressure = getIndicatorValue(summary.jobs || [], "Local Salary Pressure");
+            const menuPressure = getIndicatorValue(summary.menu_prices || [], "Menu Price Inflation Signal");
+            const jobPosts = getIndicatorValue(summary.jobs || [], "Total Local Job Posts");
+
+            if (permitRate > 75 && jobPosts >= 5) {
+                return {
+                    title: "Expansion-ready",
+                    body: "Permits are clearing and hiring is active, suggesting healthy local business momentum."
+                };
+            }
+
+            if (menuPressure > 10 || salaryPressure > 10) {
+                return {
+                    title: "Margin-sensitive",
+                    body: "Watch cost discipline closely. Pricing and labor are both signaling margin pressure."
+                };
+            }
+
+            const permitRecords = debugPayload?.permit_scrape?.records?.length ?? 0;
+            return {
+                title: permitRecords ? "Monitor weekly" : "Data-light",
+                body: permitRecords
+                    ? "Signals are informative, but not extreme. This is a market to track rather than aggressively chase."
+                    : "Source coverage is limited right now, so confidence is directionally useful but lighter than ideal."
+            };
+        }
+
+        function buildBriefSummary(summary) {
+            const permitCount = getIndicatorValue(summary.permits || [], "Commercial Permits Scraped");
+            const issuedRate = getIndicatorValue(summary.permits || [], "Issued Permit Rate");
+            const menuPressure = getIndicatorValue(summary.menu_prices || [], "Menu Price Inflation Signal");
+            const totalJobs = getIndicatorValue(summary.jobs || [], "Total Local Job Posts");
+            const salaryPressure = getIndicatorValue(summary.jobs || [], "Local Salary Pressure");
+
+            return `EconPulse is reading ${formatInteger(permitCount)} commercial permits, an issued-permit rate of ${formatNumber(issuedRate)}%, menu inflation pressure of ${formatNumber(menuPressure)}%, and ${formatInteger(totalJobs)} local job posts. Combined, the latest signal stack suggests ${Number(summary.local_economic_heat_score) >= 55 ? "an active growth environment with visible cost pressure" : "a stable but watch-worthy local market"}, while salary pressure is currently running at ${formatNumber(salaryPressure)}%.`;
+        }
+
+        function buildInsightCards(summary) {
+            const cards = [
+                {
+                    label: "Development",
+                    value: formatInteger(getIndicatorValue(summary.permits || [], "Commercial Permits Scraped")),
+                    copy: "Commercial permits scraped from the current local extract."
+                },
+                {
+                    label: "Food Inflation",
+                    value: `${formatNumber(getIndicatorValue(summary.menu_prices || [], "Menu Price Inflation Signal"))}%`,
+                    copy: "Average benchmark restaurant price pressure vs baseline."
+                },
+                {
+                    label: "Labor Tightness",
+                    value: `${formatNumber(getIndicatorValue(summary.jobs || [], "Local Salary Pressure"))}%`,
+                    copy: "Median wage pressure across tracked hiring sectors."
+                }
+            ];
+
+            const container = document.getElementById("insightGrid");
+            container.innerHTML = "";
+            cards.forEach(card => {
+                const element = document.createElement("div");
+                element.className = "rounded-2xl border border-slate-800 bg-slate-950/60 p-4";
+                element.innerHTML = `
+                    <p class="text-xs uppercase eyebrow text-slate-500">${card.label}</p>
+                    <p class="mt-3 text-3xl font-semibold text-white">${card.value}</p>
+                    <p class="mt-2 text-sm leading-6 text-slate-400">${card.copy}</p>
+                `;
+                container.appendChild(element);
+            });
+        }
+
+        function renderNotes(notes) {
+            const list = document.getElementById("notesList");
+            list.innerHTML = "";
+            notes.forEach(note => {
+                const item = document.createElement("li");
+                item.className = "rounded-2xl border border-slate-800 bg-slate-950/60 px-4 py-3 leading-6";
+                item.textContent = note;
+                list.appendChild(item);
+            });
+        }
+
+        function renderRecords(records, containerId, renderer) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = "";
+
+            records.slice(0, 3).forEach(record => {
+                const card = document.createElement("div");
+                card.className = "rounded-2xl border border-slate-800 bg-slate-900/70 p-3";
+                card.innerHTML = renderer(record);
+                container.appendChild(card);
+            });
+        }
+
+        function updateImpactCopy() {
+            setText("impactBody", IMPACT_COPY[activeImpact]);
+
+            document.querySelectorAll(".impact-tab").forEach(button => {
+                const isActive = button.dataset.impact === activeImpact;
+                button.className = isActive
+                    ? "impact-tab rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-2 text-xs font-medium text-cyan-200"
+                    : "impact-tab rounded-full border border-slate-700 bg-slate-900/70 px-3 py-2 text-xs font-medium text-slate-200";
+            });
+        }
+
         function upsertPermitChart(permitIndicators) {
             const labels = permitIndicators.map(item => item.label);
             const values = permitIndicators.map(item => item.value);
+
             const config = {
                 type: "bar",
                 data: {
@@ -298,30 +666,23 @@
                         label: "Permit Signal",
                         data: values,
                         backgroundColor: [
-                            "rgba(52, 211, 153, 0.82)",
-                            "rgba(16, 185, 129, 0.72)",
-                            "rgba(45, 212, 191, 0.78)",
-                            "rgba(34, 197, 94, 0.72)",
-                            "rgba(20, 184, 166, 0.72)"
+                            "rgba(116, 242, 206, 0.85)",
+                            "rgba(82, 212, 173, 0.80)",
+                            "rgba(62, 201, 216, 0.78)",
+                            "rgba(100, 217, 255, 0.75)",
+                            "rgba(188, 167, 255, 0.68)"
                         ],
-                        borderColor: [
-                            "#6ee7b7",
-                            "#34d399",
-                            "#5eead4",
-                            "#4ade80",
-                            "#2dd4bf"
-                        ],
-                        borderWidth: 1.5,
-                        borderRadius: 10
+                        borderRadius: 12,
+                        borderSkipped: false
                     }]
                 },
                 options: {
-                    ...buildBaseChartOptions(),
+                    ...buildCartesianOptions(),
                     plugins: {
-                        ...buildBaseChartOptions().plugins,
+                        ...buildCartesianOptions().plugins,
                         legend: { display: false },
                         tooltip: {
-                            ...buildBaseChartOptions().plugins.tooltip,
+                            ...buildCartesianOptions().plugins.tooltip,
                             callbacks: {
                                 label(context) {
                                     const unit = permitIndicators[context.dataIndex]?.unit;
@@ -350,67 +711,63 @@
         }
 
         function upsertMenuChart(menuIndicators) {
-            const menuPrices = menuIndicators.filter(item => item.unit === "usd");
-            const priceSignal = menuIndicators.find(item => item.unit === "percent");
-            const labels = menuPrices.map(item => item.label);
-            const values = menuPrices.map(item => item.value);
+            const labels = [];
+            const liveValues = [];
+            const baselineValues = [];
+
+            menuIndicators
+                .filter(item => item.unit === "usd")
+                .forEach(item => {
+                    labels.push(item.label.replace("Median ", ""));
+                    liveValues.push(item.value);
+                    baselineValues.push(MENU_BASELINES[item.label] ?? item.value);
+                });
 
             const config = {
-                type: "radar",
+                type: "bar",
                 data: {
                     labels,
                     datasets: [
                         {
-                            label: "Benchmark Price",
-                            data: values,
-                            backgroundColor: "rgba(34, 211, 238, 0.18)",
-                            borderColor: "#22d3ee",
-                            pointBackgroundColor: "#67e8f9",
-                            pointBorderColor: "#cffafe",
-                            pointRadius: 4,
-                            borderWidth: 2
+                            label: "Live Price",
+                            data: liveValues,
+                            backgroundColor: "rgba(100, 217, 255, 0.85)",
+                            borderRadius: 10
+                        },
+                        {
+                            label: "Baseline",
+                            data: baselineValues,
+                            backgroundColor: "rgba(255, 255, 255, 0.18)",
+                            borderRadius: 10
                         }
                     ]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
+                    ...buildCartesianOptions(),
                     plugins: {
-                        legend: {
-                            labels: {
-                                color: chartTextColor
-                            }
-                        },
+                        ...buildCartesianOptions().plugins,
                         tooltip: {
-                            backgroundColor: "rgba(2, 6, 23, 0.92)",
-                            borderColor: "rgba(148, 163, 184, 0.18)",
-                            borderWidth: 1,
-                            titleColor: "#f8fafc",
-                            bodyColor: "#cbd5e1",
+                            ...buildCartesianOptions().plugins.tooltip,
                             callbacks: {
                                 label(context) {
-                                    return `${context.label}: ${formatCurrencyPrecise(context.raw)}`;
-                                },
-                                afterBody() {
-                                    return priceSignal
-                                        ? [`Inflation Signal: ${formatNumber(priceSignal.value)}%`]
-                                        : [];
+                                    return `${context.dataset.label}: ${formatCurrency(context.raw, 2)}`;
                                 }
                             }
                         }
                     },
                     scales: {
-                        r: {
-                            angleLines: { color: chartGridColor },
-                            grid: { color: chartGridColor },
-                            pointLabels: { color: chartTextColor, font: { size: 12 } },
+                        x: {
+                            ticks: { color: chartTextColor },
+                            grid: { display: false }
+                        },
+                        y: {
                             ticks: {
                                 color: chartTextColor,
-                                backdropColor: "transparent",
                                 callback(value) {
                                     return `$${value}`;
                                 }
-                            }
+                            },
+                            grid: { color: chartGridColor }
                         }
                     }
                 }
@@ -438,12 +795,12 @@
                     datasets: [{
                         data: values,
                         backgroundColor: [
-                            "rgba(96, 165, 250, 0.9)",
-                            "rgba(251, 191, 36, 0.88)",
-                            "rgba(251, 113, 133, 0.84)"
+                            "rgba(100, 217, 255, 0.88)",
+                            "rgba(255, 207, 90, 0.88)",
+                            "rgba(255, 143, 112, 0.84)"
                         ],
-                        borderColor: "#020617",
-                        borderWidth: 4,
+                        borderColor: "#07111f",
+                        borderWidth: 5,
                         hoverOffset: 8
                     }]
                 },
@@ -453,20 +810,17 @@
                     plugins: {
                         legend: {
                             position: "bottom",
-                            labels: {
-                                color: chartTextColor,
-                                padding: 18
-                            }
+                            labels: { color: chartTextColor, padding: 18 }
                         },
                         tooltip: {
-                            backgroundColor: "rgba(2, 6, 23, 0.92)",
+                            backgroundColor: "rgba(2, 6, 23, 0.94)",
                             borderColor: "rgba(148, 163, 184, 0.18)",
                             borderWidth: 1,
                             titleColor: "#f8fafc",
                             bodyColor: "#cbd5e1",
                             callbacks: {
                                 label(context) {
-                                    return `${context.label}: ${formatNumber(context.raw, 0)} postings`;
+                                    return `${context.label}: ${formatInteger(context.raw)} postings`;
                                 }
                             }
                         }
@@ -484,57 +838,178 @@
             jobsChart = new Chart(document.getElementById("jobsChart"), config);
         }
 
-        function renderNotes(notes) {
-            const list = document.getElementById("notesList");
-            list.innerHTML = "";
-            notes.forEach(note => {
-                const item = document.createElement("li");
-                item.className = "rounded-2xl border border-slate-800 bg-slate-950/60 px-4 py-3 text-slate-300";
-                item.textContent = note;
-                list.appendChild(item);
-            });
+        function upsertSalaryChart(jobIndicators) {
+            const salaryIndicators = jobIndicators.filter(item => item.unit === "usd" && item.label.includes("Median Salary"));
+            const config = {
+                type: "bar",
+                data: {
+                    labels: salaryIndicators.map(item => item.label.replace(" Median Salary", "")),
+                    datasets: [{
+                        label: "Median Salary",
+                        data: salaryIndicators.map(item => item.value),
+                        backgroundColor: [
+                            "rgba(188, 167, 255, 0.85)",
+                            "rgba(255, 143, 112, 0.82)",
+                            "rgba(100, 217, 255, 0.82)"
+                        ],
+                        borderRadius: 12,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    ...buildCartesianOptions(),
+                    plugins: {
+                        ...buildCartesianOptions().plugins,
+                        legend: { display: false },
+                        tooltip: {
+                            ...buildCartesianOptions().plugins.tooltip,
+                            callbacks: {
+                                label(context) {
+                                    return `${context.label}: ${formatCurrency(context.raw)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: chartTextColor },
+                            grid: { display: false }
+                        },
+                        y: {
+                            ticks: {
+                                color: chartTextColor,
+                                callback(value) {
+                                    return formatCurrency(value);
+                                }
+                            },
+                            grid: { color: chartGridColor }
+                        }
+                    }
+                }
+            };
+
+            if (salaryChart) {
+                salaryChart.data = config.data;
+                salaryChart.options = config.options;
+                salaryChart.update();
+                return;
+            }
+
+            salaryChart = new Chart(document.getElementById("salaryChart"), config);
+        }
+
+        function renderDashboard(debugPayload) {
+            const summary = debugPayload.summary;
+            const marketCall = deriveMarketCall(summary);
+            const trend = deriveTrend(summary);
+            const lens = deriveDecisionLens(summary, debugPayload);
+
+            setText("inflationIndex", formatNumber(summary.local_inflation_index));
+            setText("heatScore", formatNumber(summary.local_economic_heat_score));
+            setText("trendDirection", trend.direction);
+            setText("trendDetail", trend.detail);
+            setText("decisionLens", lens.title);
+            setText("decisionLensBody", lens.body);
+            setText("marketCallTitle", marketCall.title);
+            setText("marketCallBody", marketCall.body);
+            setText("cityLabel", summary.city);
+            setText("briefSummary", buildBriefSummary(summary));
+
+            const badge = document.getElementById("marketCallBadge");
+            badge.textContent = marketCall.badge;
+            badge.className = `rounded-full border px-3 py-1 text-xs font-medium ${marketCall.badgeClass}`;
+
+            const observedDate = new Date(summary.observed_at);
+            setText(
+                "lastUpdated",
+                observedDate.toLocaleString(undefined, {
+                    dateStyle: "medium",
+                    timeStyle: "short"
+                })
+            );
+
+            const permitRecords = debugPayload.permit_scrape?.records || [];
+            const menuRecords = debugPayload.menu_scrape?.records || [];
+            const jobRecords = debugPayload.job_scrape?.records || [];
+
+            setText("permitCoverage", `${permitRecords.length} source rows`);
+            setText("menuCoverage", `${menuRecords.length} source rows`);
+            setText("jobCoverage", `${jobRecords.length} source rows`);
+            setText("heroCoverage", `${permitRecords.length} permit rows, ${menuRecords.length} menu rows, and ${jobRecords.length} job rows are informing the latest pulse.`);
+
+            buildInsightCards(summary);
+            renderNotes(summary.notes || []);
+
+            renderRecords(permitRecords, "permitRecords", (record) => `
+                <p class="font-medium text-white">${record.project_type}</p>
+                <p class="mt-1 text-slate-400">${record.address}</p>
+                <p class="mt-2 text-xs uppercase eyebrow text-slate-500">${record.status} | ${formatCurrency(record.declared_value)}</p>
+            `);
+
+            renderRecords(menuRecords, "menuRecords", (record) => `
+                <p class="font-medium text-white">${record.item_name}</p>
+                <p class="mt-1 text-slate-400">${record.benchmark_item.replace("_", " ")}</p>
+                <p class="mt-2 text-xs uppercase eyebrow text-slate-500">${formatCurrency(record.price, 2)}</p>
+            `);
+
+            renderRecords(jobRecords, "jobRecords", (record) => `
+                <p class="font-medium text-white">${record.job_title}</p>
+                <p class="mt-1 text-slate-400">${record.company}</p>
+                <p class="mt-2 text-xs uppercase eyebrow text-slate-500">${record.sector_text} | ${record.salary_band}</p>
+            `);
+
+            upsertPermitChart(summary.permits || []);
+            upsertMenuChart(summary.menu_prices || []);
+            upsertJobsChart(summary.jobs || []);
+            upsertSalaryChart(summary.jobs || []);
         }
 
         async function loadDashboard() {
             hideError();
 
             try {
-                const response = await fetch("/api/v1/forecast/summary", {
-                    headers: { "Accept": "application/json" }
+                const response = await fetch("/api/v1/forecast/debug", {
+                    headers: { Accept: "application/json" }
                 });
 
                 if (!response.ok) {
                     throw new Error(`Forecast request failed with status ${response.status}`);
                 }
 
-                const payload = await response.json();
-
-                setText("inflationIndex", formatNumber(payload.local_inflation_index));
-                setText("heatScore", formatNumber(payload.local_economic_heat_score));
-
-                const localTimestamp = new Date(payload.observed_at);
-                setText(
-                    "lastUpdated",
-                    localTimestamp.toLocaleString(undefined, {
-                        dateStyle: "medium",
-                        timeStyle: "short"
-                    })
-                );
-
-                setText("permitCoverage", `${payload.permits.length} indicators`);
-                setText("menuCoverage", `${payload.menu_prices.length} indicators`);
-                setText("jobCoverage", `${payload.jobs.length} indicators`);
-
-                renderNotes(payload.notes || []);
-                upsertPermitChart(payload.permits || []);
-                upsertMenuChart(payload.menu_prices || []);
-                upsertJobsChart(payload.jobs || []);
+                const debugPayload = await response.json();
+                renderDashboard(debugPayload);
             } catch (error) {
                 console.error(error);
-                showError("Unable to load forecast data. Confirm the FastAPI API is running and returning /api/v1/forecast/summary.");
+                showError("Unable to load EconPulse data right now. Confirm the API is running and returning /api/v1/forecast/debug.");
             }
         }
 
+        document.getElementById("viewForecastButton").addEventListener("click", () => {
+            document.getElementById("forecastSection").scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+
+        document.getElementById("refreshButton").addEventListener("click", async () => {
+            const button = document.getElementById("refreshButton");
+            const previousText = button.textContent;
+            button.textContent = "Refreshing...";
+            button.disabled = true;
+
+            try {
+                await loadDashboard();
+            } finally {
+                button.textContent = previousText;
+                button.disabled = false;
+            }
+        });
+
+        document.querySelectorAll(".impact-tab").forEach(button => {
+            button.addEventListener("click", () => {
+                activeImpact = button.dataset.impact;
+                updateImpactCopy();
+            });
+        });
+
+        updateImpactCopy();
         loadDashboard();
         setInterval(loadDashboard, 60000);
     </script>
