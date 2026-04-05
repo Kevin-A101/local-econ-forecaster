@@ -82,50 +82,46 @@ async def scrape_commercial_permits(
     config = config or build_permit_config(city)
     rows: list[dict[str, str]] = []
 
-    try:
-        async with async_playwright() as playwright:
-            browser = await playwright.chromium.launch(headless=config.headless)
-            page = await browser.new_page()
+    if config.source_url.startswith("mock://"):
+        rows = _extract_rows_from_html(config.mock_html)
+    else:
+        try:
+            async with async_playwright() as playwright:
+                browser = await playwright.chromium.launch(headless=config.headless)
+                page = await browser.new_page()
 
-            try:
-                if config.source_url.startswith("mock://"):
-                    await page.set_content(config.mock_html)
-                else:
+                try:
                     await page.goto(config.source_url, wait_until="domcontentloaded")
+                    await page.wait_for_selector(
+                        config.page_ready_selector,
+                        timeout=config.timeout_ms,
+                    )
 
-                await page.wait_for_selector(
-                    config.page_ready_selector,
-                    timeout=config.timeout_ms,
-                )
-
-                rows = await page.locator(
-                    f"{config.table_selector} {config.row_selector}"
-                ).evaluate_all(
-                    """
-                    (elements) => elements.map((row) => {
-                        const cells = Array.from(row.querySelectorAll("td, th"))
-                            .map((cell) => cell.innerText.trim());
-                        return {
-                            permit_id: cells[0] ?? "",
-                            project_type: cells[1] ?? "",
-                            status: cells[2] ?? "",
-                            issued_date: cells[3] ?? "",
-                            address: cells[4] ?? "",
-                            declared_value: cells[5] ?? "",
-                        };
-                    })
-                    """
-                )
-            except PlaywrightTimeoutError as exc:
-                raise RuntimeError(
-                    f"Timed out while waiting for permit portal selector '{config.page_ready_selector}'"
-                ) from exc
-            finally:
-                await browser.close()
-    except PlaywrightError:
-        if config.source_url.startswith("mock://"):
-            rows = _extract_rows_from_html(config.mock_html)
-        else:
+                    rows = await page.locator(
+                        f"{config.table_selector} {config.row_selector}"
+                    ).evaluate_all(
+                        """
+                        (elements) => elements.map((row) => {
+                            const cells = Array.from(row.querySelectorAll("td, th"))
+                                .map((cell) => cell.innerText.trim());
+                            return {
+                                permit_id: cells[0] ?? "",
+                                project_type: cells[1] ?? "",
+                                status: cells[2] ?? "",
+                                issued_date: cells[3] ?? "",
+                                address: cells[4] ?? "",
+                                declared_value: cells[5] ?? "",
+                            };
+                        })
+                        """
+                    )
+                except PlaywrightTimeoutError as exc:
+                    raise RuntimeError(
+                        f"Timed out while waiting for permit portal selector '{config.page_ready_selector}'"
+                    ) from exc
+                finally:
+                    await browser.close()
+        except PlaywrightError:
             raise
 
     normalized_rows = [

@@ -102,50 +102,46 @@ async def scrape_local_jobs(
     config = config or build_jobs_config(city)
     rows: list[dict[str, str]] = []
 
-    try:
-        async with async_playwright() as playwright:
-            browser = await playwright.chromium.launch(headless=config.headless)
-            page = await browser.new_page()
+    if config.source_url.startswith("mock://"):
+        rows = _extract_rows_from_html(config.mock_html, config)
+    else:
+        try:
+            async with async_playwright() as playwright:
+                browser = await playwright.chromium.launch(headless=config.headless)
+                page = await browser.new_page()
 
-            try:
-                if config.source_url.startswith("mock://"):
-                    await page.set_content(config.mock_html)
-                else:
+                try:
                     await page.goto(config.source_url, wait_until="domcontentloaded")
+                    await page.wait_for_selector(
+                        config.page_ready_selector,
+                        timeout=config.timeout_ms,
+                    )
 
-                await page.wait_for_selector(
-                    config.page_ready_selector,
-                    timeout=config.timeout_ms,
-                )
+                    rows = await page.locator(config.card_selector).evaluate_all(
+                        f"""
+                        (elements) => elements.map((card) => {{
+                            const getText = (selector) => {{
+                                const node = card.querySelector(selector);
+                                return node ? node.innerText.trim() : "";
+                            }};
 
-                rows = await page.locator(config.card_selector).evaluate_all(
-                    f"""
-                    (elements) => elements.map((card) => {{
-                        const getText = (selector) => {{
-                            const node = card.querySelector(selector);
-                            return node ? node.innerText.trim() : "";
-                        }};
-
-                        return {{
-                            job_title: getText("{config.title_selector}"),
-                            sector_text: getText("{config.sector_selector}"),
-                            company: getText("{config.company_selector}"),
-                            location: getText("{config.location_selector}"),
-                            salary_band: getText("{config.salary_selector}"),
-                        }};
-                    }})
-                    """
-                )
-            except PlaywrightTimeoutError as exc:
-                raise RuntimeError(
-                    f"Timed out while waiting for job selector '{config.page_ready_selector}'"
-                ) from exc
-            finally:
-                await browser.close()
-    except PlaywrightError:
-        if config.source_url.startswith("mock://"):
-            rows = _extract_rows_from_html(config.mock_html, config)
-        else:
+                            return {{
+                                job_title: getText("{config.title_selector}"),
+                                sector_text: getText("{config.sector_selector}"),
+                                company: getText("{config.company_selector}"),
+                                location: getText("{config.location_selector}"),
+                                salary_band: getText("{config.salary_selector}"),
+                            }};
+                        }})
+                        """
+                    )
+                except PlaywrightTimeoutError as exc:
+                    raise RuntimeError(
+                        f"Timed out while waiting for job selector '{config.page_ready_selector}'"
+                    ) from exc
+                finally:
+                    await browser.close()
+        except PlaywrightError:
             raise
 
     normalized_rows = []

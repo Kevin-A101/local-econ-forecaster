@@ -83,48 +83,44 @@ async def scrape_restaurant_menu(
     config = config or build_menu_config(city)
     rows: list[dict[str, str]] = []
 
-    try:
-        async with async_playwright() as playwright:
-            browser = await playwright.chromium.launch(headless=config.headless)
-            page = await browser.new_page()
+    if config.source_url.startswith("mock://"):
+        rows = _extract_rows_from_html(config.mock_html, config)
+    else:
+        try:
+            async with async_playwright() as playwright:
+                browser = await playwright.chromium.launch(headless=config.headless)
+                page = await browser.new_page()
 
-            try:
-                if config.source_url.startswith("mock://"):
-                    await page.set_content(config.mock_html)
-                else:
+                try:
                     await page.goto(config.source_url, wait_until="domcontentloaded")
+                    await page.wait_for_selector(
+                        config.page_ready_selector,
+                        timeout=config.timeout_ms,
+                    )
 
-                await page.wait_for_selector(
-                    config.page_ready_selector,
-                    timeout=config.timeout_ms,
-                )
+                    rows = await page.locator(config.item_selector).evaluate_all(
+                        f"""
+                        (elements) => elements.map((item) => {{
+                            const getText = (selector) => {{
+                                const node = item.querySelector(selector);
+                                return node ? node.innerText.trim() : "";
+                            }};
 
-                rows = await page.locator(config.item_selector).evaluate_all(
-                    f"""
-                    (elements) => elements.map((item) => {{
-                        const getText = (selector) => {{
-                            const node = item.querySelector(selector);
-                            return node ? node.innerText.trim() : "";
-                        }};
-
-                        return {{
-                            item_name: getText("{config.name_selector}"),
-                            item_description: getText("{config.description_selector}"),
-                            price: getText("{config.price_selector}"),
-                        }};
-                    }})
-                    """
-                )
-            except PlaywrightTimeoutError as exc:
-                raise RuntimeError(
-                    f"Timed out while waiting for menu selector '{config.page_ready_selector}'"
-                ) from exc
-            finally:
-                await browser.close()
-    except PlaywrightError:
-        if config.source_url.startswith("mock://"):
-            rows = _extract_rows_from_html(config.mock_html, config)
-        else:
+                            return {{
+                                item_name: getText("{config.name_selector}"),
+                                item_description: getText("{config.description_selector}"),
+                                price: getText("{config.price_selector}"),
+                            }};
+                        }})
+                        """
+                    )
+                except PlaywrightTimeoutError as exc:
+                    raise RuntimeError(
+                        f"Timed out while waiting for menu selector '{config.page_ready_selector}'"
+                    ) from exc
+                finally:
+                    await browser.close()
+        except PlaywrightError:
             raise
 
     normalized_rows = []
