@@ -170,7 +170,7 @@ def _confidence_from_payloads(*payloads: dict) -> dict:
     available_signals = 0
     coverage_modes = []
 
-    for signal_name, payload in zip(signal_names, payloads, strict=True):
+    for signal_name, payload in zip(signal_names, payloads):
         available = bool(payload.get("signal_available"))
         available_signals += int(available)
         coverage_mode = str(payload.get("coverage_mode", "city"))
