@@ -1,5 +1,4 @@
 # 📈 EconPulse: Hyper-Local Economic Forecaster
-**Built for the OpenAI Codex Creator Challenge**
 
 Traditional macroeconomic indicators (like federal CPI and GDP) lag by months and fail to capture the reality of individual neighborhoods. EconPulse bypasses federal data entirely, using automated scraping and machine learning to calculate real-time inflation and economic heat scores for a single city block.
 
