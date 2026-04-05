@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Optional
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -156,7 +157,7 @@ if STATIC_DIR.exists():
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
-def _resolve_location_or_400(location: str | None):
+def _resolve_location_or_400(location: Optional[str]):
     try:
         return resolve_location(location)
     except ValueError as exc:
@@ -223,7 +224,7 @@ def _confidence_from_payloads(*payloads: dict) -> dict:
     }
 
 
-async def build_live_summary(location: str | None = None) -> ForecastSummary:
+async def build_live_summary(location: Optional[str] = None) -> ForecastSummary:
     permit_payload = await scrape_commercial_permits(city=location)
     menu_payload = await scrape_restaurant_menu(city=location)
     job_payload = await scrape_local_jobs(city=location)
@@ -286,7 +287,7 @@ async def get_supported_cities_alias() -> SupportedLocationsResponse:
     tags=["scraping"],
 )
 async def get_commercial_permits(
-    city: str | None = Query(default=None, description="Any US state, supported city, or city/state input like Phoenix, AZ"),
+    city: Optional[str] = Query(default=None, description="Any US state, supported city, or city/state input like Phoenix, AZ"),
 ) -> PermitScrapeResponse:
     _resolve_location_or_400(city)
     payload = await scrape_commercial_permits(city=city)
@@ -299,7 +300,7 @@ async def get_commercial_permits(
     tags=["scraping"],
 )
 async def get_restaurant_menu(
-    city: str | None = Query(default=None, description="Any US state, supported city, or city/state input like Phoenix, AZ"),
+    city: Optional[str] = Query(default=None, description="Any US state, supported city, or city/state input like Phoenix, AZ"),
 ) -> MenuScrapeResponse:
     _resolve_location_or_400(city)
     payload = await scrape_restaurant_menu(city=city)
@@ -312,7 +313,7 @@ async def get_restaurant_menu(
     tags=["scraping"],
 )
 async def get_local_jobs(
-    city: str | None = Query(default=None, description="Any US state, supported city, or city/state input like Phoenix, AZ"),
+    city: Optional[str] = Query(default=None, description="Any US state, supported city, or city/state input like Phoenix, AZ"),
 ) -> JobScrapeResponse:
     _resolve_location_or_400(city)
     payload = await scrape_local_jobs(city=city)
@@ -321,7 +322,7 @@ async def get_local_jobs(
 
 @app.get("/api/v1/forecast/summary", response_model=ForecastSummary, tags=["forecast"])
 async def get_forecast_summary(
-    city: str | None = Query(default=None, description="Any US state, supported city, or city/state input like Phoenix, AZ"),
+    city: Optional[str] = Query(default=None, description="Any US state, supported city, or city/state input like Phoenix, AZ"),
 ) -> ForecastSummary:
     _resolve_location_or_400(city)
     return await build_live_summary(location=city)
@@ -329,7 +330,7 @@ async def get_forecast_summary(
 
 @app.get("/api/v1/forecast/debug", tags=["forecast"])
 async def get_debug_payload(
-    city: str | None = Query(default=None, description="Any US state, supported city, or city/state input like Phoenix, AZ"),
+    city: Optional[str] = Query(default=None, description="Any US state, supported city, or city/state input like Phoenix, AZ"),
 ) -> JSONResponse:
     resolved_profile = _resolve_location_or_400(city)
     permit_scrape = await scrape_commercial_permits(city=city)

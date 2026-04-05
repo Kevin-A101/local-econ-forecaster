@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import os
 from dataclasses import dataclass
+from typing import Optional
 
 
 @dataclass(frozen=True)
@@ -333,7 +334,7 @@ def _build_state_fallback_profile(requested_city: str, state_code: str) -> Locat
     )
 
 
-def resolve_location(query: str | None) -> LocationProfile:
+def resolve_location(query: Optional[str]) -> LocationProfile:
     if not query:
         return CITY_PROFILES["frisco"]
 
@@ -369,7 +370,7 @@ def resolve_location(query: str | None) -> LocationProfile:
     )
 
 
-def resolve_city(query: str | None) -> LocationProfile:
+def resolve_city(query: Optional[str]) -> LocationProfile:
     return resolve_location(query)
 
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional
 
 from bs4 import BeautifulSoup
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
@@ -35,7 +35,7 @@ class MenuPortalConfig:
     headless: bool = True
 
 
-def build_menu_config(city_query: str | None = None) -> MenuPortalConfig:
+def build_menu_config(city_query: Optional[str] = None) -> MenuPortalConfig:
     profile = resolve_location(city_query)
     return MenuPortalConfig(
         city=profile.display_name,
@@ -51,7 +51,7 @@ def _parse_currency(value: str) -> float:
     return float(cleaned) if cleaned else 0.0
 
 
-def _classify_benchmark_item(name: str, description: str) -> str | None:
+def _classify_benchmark_item(name: str, description: str) -> Optional[str]:
     combined = f"{name} {description}".strip()
     for benchmark, pattern in BENCHMARK_PATTERNS.items():
         if pattern.search(combined):
@@ -77,8 +77,8 @@ def _extract_rows_from_html(html: str, config: MenuPortalConfig) -> list[dict[st
 
 
 async def scrape_restaurant_menu(
-    city: str | None = None,
-    config: MenuPortalConfig | None = None,
+    city: Optional[str] = None,
+    config: Optional[MenuPortalConfig] = None,
 ) -> dict[str, Any]:
     config = config or build_menu_config(city)
     rows: list[dict[str, str]] = []

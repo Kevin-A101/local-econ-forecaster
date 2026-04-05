@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional
 
 from bs4 import BeautifulSoup
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
@@ -40,7 +40,7 @@ class JobPortalConfig:
     headless: bool = True
 
 
-def build_jobs_config(city_query: str | None = None) -> JobPortalConfig:
+def build_jobs_config(city_query: Optional[str] = None) -> JobPortalConfig:
     profile = resolve_location(city_query)
     return JobPortalConfig(
         city=profile.display_name,
@@ -51,7 +51,7 @@ def build_jobs_config(city_query: str | None = None) -> JobPortalConfig:
     )
 
 
-def _classify_sector(title: str, sector_text: str) -> str | None:
+def _classify_sector(title: str, sector_text: str) -> Optional[str]:
     combined = f"{title} {sector_text}".strip()
     for sector, pattern in SECTOR_PATTERNS.items():
         if pattern.search(combined):
@@ -96,8 +96,8 @@ def _extract_rows_from_html(html: str, config: JobPortalConfig) -> list[dict[str
 
 
 async def scrape_local_jobs(
-    city: str | None = None,
-    config: JobPortalConfig | None = None,
+    city: Optional[str] = None,
+    config: Optional[JobPortalConfig] = None,
 ) -> dict[str, Any]:
     config = config or build_jobs_config(city)
     rows: list[dict[str, str]] = []

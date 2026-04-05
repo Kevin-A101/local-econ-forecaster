@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 
 from bs4 import BeautifulSoup
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
@@ -27,7 +27,7 @@ class PermitPortalConfig:
     headless: bool = True
 
 
-def build_permit_config(city_query: str | None = None) -> PermitPortalConfig:
+def build_permit_config(city_query: Optional[str] = None) -> PermitPortalConfig:
     profile = resolve_location(city_query)
     return PermitPortalConfig(
         city=profile.display_name,
@@ -76,8 +76,8 @@ def _extract_rows_from_html(html: str) -> list[dict[str, str]]:
 
 
 async def scrape_commercial_permits(
-    city: str | None = None,
-    config: PermitPortalConfig | None = None,
+    city: Optional[str] = None,
+    config: Optional[PermitPortalConfig] = None,
 ) -> dict[str, Any]:
     config = config or build_permit_config(city)
     rows: list[dict[str, str]] = []
