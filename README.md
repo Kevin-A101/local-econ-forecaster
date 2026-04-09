@@ -3,7 +3,7 @@
 Traditional macroeconomic indicators (like federal CPI and GDP) lag by months and fail to capture the reality of individual neighborhoods. EconPulse bypasses federal data entirely, using automated scraping and machine learning to calculate real-time inflation and economic heat scores for a single city block.
 
 ## 🏗️ The Architecture
-EconPulse is not a standard LLM chatbot. It is a full-stack, automated data pipeline built entirely using Codex:
+EconPulse is not a standard LLM chatbot.
 
 * **The Scrapers (Playwright & Python):** Three independent scraping pipelines extract unstructured local data:
     * *Commercial Building Permits:* Tracks capital influx and real estate development.
